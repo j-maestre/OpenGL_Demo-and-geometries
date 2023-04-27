@@ -8,7 +8,7 @@
 
 
 #include "material_custom.h"
-
+#include "Lights.h"
 #include "EDK3/scoped_ptr.h"
 #include "ESAT/time.h"
 #include "EDK3/dev/gpumanager.h"
@@ -162,7 +162,26 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
 
     uniform_att = program_->get_uniform_position("u_color");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_4, ms->color());
+
+    EDK3::ref_ptr<DirLight> light = ms->dir_light();
+    uniform_att = program_->get_uniform_position("u_dirLight.active");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->active);
+   
+    uniform_att = program_->get_uniform_position("u_dirLight.dir"); // Esto es lo unico que pilla la rata de cloaca
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, light->dir);
     
+    uniform_att = program_->get_uniform_position("u_dirLight.diffuse_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, light->diffuse_color);
+
+    uniform_att = program_->get_uniform_position("u_dirLight.specular_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, light->specular_color);
+    
+    uniform_att = program_->get_uniform_position("u_dirLight.specular_strength");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, &light->specular_strength);
+
+    uniform_att = program_->get_uniform_position("u_dirLight.specular_shininess");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, &light->specular_shininess);
+
     int texture_pos = 0;
     ms->get_diffuse_texture()->bind(texture_pos);
     uniform_att = program_->get_uniform_position("u_diffuse_color");
@@ -172,6 +191,9 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
     ms->get_specular_texture()->bind(texture_pos);
     uniform_att = program_->get_uniform_position("u_specular_color");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_INT_1, &texture_pos);
+
+
+
     return true;
   }
   

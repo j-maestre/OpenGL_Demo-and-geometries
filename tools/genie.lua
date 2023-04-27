@@ -64,6 +64,7 @@ solution("EDK_Workspace_" .. _ACTION)
         path.join(PROJ_DIR, "./deps/Perlin/include/"),
         path.join(PROJ_DIR, "./deps/Perlin/src/"),
         path.join(PROJ_DIR, "./deps/STB/include/"),
+        path.join(PROJ_DIR, "./deps/oxml/include"),
       }
       files {
         path.join(PROJ_DIR, "./include/*.h"),
@@ -77,6 +78,8 @@ solution("EDK_Workspace_" .. _ACTION)
         path.join(PROJ_DIR, "./deps/Perlin/include/Perlin/*.h"),
         path.join(PROJ_DIR, "./deps/Perlin/src/*.cpp"),
         path.join(PROJ_DIR, "./deps/STB/include/*.h"),
+        path.join(PROJ_DIR, "./deps/oxml/src/*.cc"),
+        path.join(PROJ_DIR, "./deps/oxml/include/oxml/*.h"),
       }
 
       libdirs { path.join(PROJ_DIR, "./deps/EDK/lib/EDK/x32"), }

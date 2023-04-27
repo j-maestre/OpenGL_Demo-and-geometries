@@ -17,7 +17,10 @@
 #include "EDK3/drawable.h"
 #include "EDK3/matdiffusetexture.h"
 #include "EDK3/texture.h"
+#include "Lights.h"
 #include "EDK3/dev/gpumanager.h"
+#include "geometry_custom_terrain.h"
+#include "material_custom.h"
 
 #include "ESAT_extra/imgui.h"
 #include "EDK3/dev/opengl.h"
@@ -32,10 +35,68 @@ struct {
 const int kWindowWidth = 1024;
 const int kWindowHeight = 768;
 
+const int kTerrainWidth = 256;
+const int kTerrainHeight = 256;
+
+
+
+
+
+
 
 void InitScene() {
   //Allocating root node:
   EDK3::Node* root = GameState.root.alloc();
+
+  // Create terrain
+  EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
+  terrain.alloc();
+  terrain->init(kTerrainWidth, kTerrainHeight);
+
+
+  // Create material
+  EDK3::ref_ptr<EDK3::MaterialCustom> mat;
+  mat.alloc();
+  mat->init("./test/terrain_vertex.shader","./test/terrain_fragment.shader");
+
+
+  // Create texture
+  EDK3::ref_ptr<EDK3::Texture> t_texture;
+  EDK3::Texture::Load("./test/T_EDK_Logo.png", &t_texture);
+
+  // Material custom settings
+  EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> mat_settings;
+  mat_settings.alloc();
+  mat_settings->set_diffuse_texture(t_texture.get());
+  mat_settings->set_specular_texture(t_texture.get());
+
+
+  // Lights
+  EDK3::ref_ptr<DirLight> dirLight;
+  dirLight.alloc();
+  dirLight->active = 1;
+  dirLight->dir[0] = 0.0f;
+  dirLight->dir[1] = 1.0f;
+  dirLight->dir[2] = 0.0f;
+  dirLight->diffuse_color[0] = 1.0f;
+  dirLight->diffuse_color[1] = 0.0f;
+  dirLight->diffuse_color[2] = 0.0f;
+  dirLight->specular_color[0] = 1.0f;
+  dirLight->specular_color[1] = 1.0f;
+  dirLight->specular_color[2] = 1.0f;
+  dirLight->specular_strength = 1.0f;
+  dirLight->specular_shininess = 1.0f;
+  mat_settings->set_dir_light(dirLight);
+
+  // Drawable
+  EDK3::ref_ptr<EDK3::Drawable> node;
+  node.alloc();
+  node->set_geometry(terrain.get());
+  node->set_material(mat.get());
+  node->set_material_settings(mat_settings.get());
+  node->set_position(-1.0f, 0.0f, -1.0f);
+
+  root->addChild(node.get());  
 
   //Allocating and initializing the camera:
   GameState.camera.alloc();

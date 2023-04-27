@@ -9,6 +9,7 @@
 #include "EDK3/dev/program.h"
 #include "EDK3/dev/shader.h"
 #include "EDK3/texture.h"
+#include "Lights.h"
 
 namespace EDK3 {
 
@@ -33,6 +34,9 @@ namespace EDK3 {
       }
       void set_color(const float v[4]) { memcpy(color_, v, sizeof(color_)); }
       const float* color() const { return color_; }
+      void set_dir_light(ref_ptr<DirLight> dirLight) {dirLight_ = dirLight;}
+      const ref_ptr<DirLight> dir_light() const { return dirLight_;}
+
       void set_diffuse_texture(ref_ptr<Texture> texture) {diffuse_ = texture;}
       void set_specular_texture(ref_ptr<Texture> texture) {specular_ = texture;}
       ref_ptr<Texture> get_diffuse_texture() const {return diffuse_;}
@@ -54,6 +58,7 @@ namespace EDK3 {
       float color_[4];
       ref_ptr<Texture> diffuse_;
       ref_ptr<Texture> specular_;
+      ref_ptr<DirLight> dirLight_;
     }; //MaterialBasicSettings
 
 

@@ -141,7 +141,7 @@ namespace EDK3
     }
 #ifdef DEBUG
 
-    for (int i = 0; i < vertex_buff.size(); i++)
+    /*for (int i = 0; i < vertex_buff.size(); i++)
     {
       printf("Vertex [%d]\n", i);
       printf("[Pos] x: %f, y: %f, z: %f\n", vertex_buff[i].pos.x, vertex_buff[i].pos.y, vertex_buff[i].pos.z);
@@ -153,7 +153,7 @@ namespace EDK3
     {
       printf("Triangle [%d]\n", (i / 3));
       printf("[Index] %d, %d, %d\n", index_buff[i], index_buff[i + 1], index_buff[i + 2]);
-    }
+    }*/
 #endif
     dev::GPUManager::Instance()->newBuffer(&elements_buffer);
     dev::GPUManager::Instance()->newBuffer(&order_buffer);
