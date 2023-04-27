@@ -188,10 +188,10 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, light->specular_color);
     
     uniform_att = program_->get_uniform_position("u_dirLight.specular_strength");
-    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, &light->specular_strength);
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->specular_strength);
 
     uniform_att = program_->get_uniform_position("u_dirLight.specular_shininess");
-    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, &light->specular_shininess);
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->specular_shininess);
 
     int texture_pos = 0;
     ms->get_diffuse_texture()->bind(texture_pos);

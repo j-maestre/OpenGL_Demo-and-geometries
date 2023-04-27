@@ -46,6 +46,7 @@ uniform sampler2D u_specular_color;
 uniform vec3 u_camera_position;
 uniform float u_time;
 uniform DirLight u_dirLight;
+uniform vec4 u_color;
 //uniform PointLight u_pointLight[4];
 //uniform SpotLight u_spotLight[4];
 
@@ -56,19 +57,19 @@ in vec3 s_fragPos;
 //vec3 direction = vec3(0.0, 1.0, 0.0);
 //vec3 diffuse = vec3(1.0, 0.5, 0.0);
 
-vec3 CalculeDirLight(vec3 view_dir) {
+vec3 CalculeDirLight(DirLight light, vec3 normal, vec3 viewDir) {
 
-  //---Difuse---
-  float diff = max(dot(s_normal, u_dirLight.dir), 0.0);
-  vec3 diffuse = diff * u_dirLight.diffuse_color;
+  /*---Difuse---*/
+  float diff = max(dot(normal, light.dir), 0.0);
+  vec3 diffuse = diff * light.diffuse_color * u_color.xyz;
 
-  //---Specular---
+  /*---Specular---*/
 
-  vec3 reflectDir = normalize(reflect(-(u_dirLight.dir), normalize(s_normal))  );
-  float spec = pow(max(dot(normalize(view_dir), normalize(reflectDir)), 0.0), u_dirLight.specular_shininess);
-  vec3 specular = u_dirLight.specular_strength * spec * u_dirLight.specular_color;
+  vec3 reflectDir = normalize(reflect(-(light.dir), normalize(normal))  );
+  float spec = pow(max(dot(normalize(viewDir), normalize(reflectDir)), 0.0), light.specular_shininess);
+  vec3 specular = light.specular_strength * spec * light.specular_color * u_color.xyz;
 
-  return (diffuse + specular) * u_dirLight.active;
+  return (diffuse + specular);
 }
 
 vec3 CaluclePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos)
@@ -77,12 +78,12 @@ vec3 CaluclePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos
 
   /*---Diffuse---*/
   float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = light.diffuse_color * diff;
+  vec3 diffuse = light.diffuse_color * diff * u_color.xyz;
 
   /*---Specular---*/
   vec3 reflectDir = reflect(-lightDir, normal);
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), light.specular_shininess);
-  vec3 specular = (light.specular_strength * spec * light.specular_color);
+  vec3 specular = (light.specular_strength * spec * light.specular_color) * u_color.xyz;
 
   /*---Attenuation---*/
   float distance = length(light.pos - fragPos);
@@ -93,7 +94,7 @@ vec3 CaluclePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos
   diffuse *= attenuation;
   specular *= attenuation;
 
-  return (diffuse + specular) * light.active;
+  return (diffuse + specular);
 }
 
 vec3 CalculeSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos) 
@@ -108,11 +109,11 @@ vec3 CalculeSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos)
   {
     /*---Diffuse---*/
     float diff = max(dot(normal, lightDir), 0.0);
-    diffuse = light.diffuse_color * diff;
+    diffuse = light.diffuse_color * diff * u_color.xyz;
     /*---Specular---*/
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), light.specular_shininess);
-    specular = (light.specular_strength * spec * light.specular_color);
+    specular = (light.specular_strength * spec * light.specular_color * u_color.xyz);
     
     float distance = length(light.pos - fragPos);
     float attenuation = 1.0 / (light.constant_att + light.linear_att * distance + 
@@ -128,11 +129,11 @@ vec3 CalculeSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos)
     specular *= intensity;
 
   }
-  return (diffuse + specular) * light.active;
+  return (diffuse + specular);
 }
 
 void main() { 
-  vec3 view_direction = normalize(vec3(120.0, 140.0, 120.0) - s_fragPos);
+  vec3 view_direction = normalize(u_camera_position - s_fragPos);
 
   float ambient_strength = 0.1;
   vec3 ambient_color = vec3(1.0);
@@ -140,9 +141,7 @@ void main() {
 
   vec3 color = ambient;
 
-  //color += CalculeDirLight(view_direction);
+  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
 
-  fragColor = vec4(CalculeDirLight(view_direction), 1.0);
-
-  //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+  fragColor = vec4(color, 1.0);
 }

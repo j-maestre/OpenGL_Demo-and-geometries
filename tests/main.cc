@@ -77,31 +77,33 @@ void InitScene() {
   // Material custom settings
 
   // Terrain
+  float terrain_color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> mat_settings;
   mat_settings.alloc();
   mat_settings->set_diffuse_texture(t_texture);
   mat_settings->set_specular_texture(t_texture);
+  mat_settings->set_color(terrain_color);
 
   // Water
 
-  float color[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+  float water_color[4] = {0.0f, 0.0f, 1.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> water_mat_settings;
   water_mat_settings.alloc();
   water_mat_settings->set_diffuse_texture(w_texture);
   water_mat_settings->set_specular_texture(w_texture);
-  water_mat_settings->set_color(color);
+  water_mat_settings->set_color(water_color);
 
 
   // Lights
   EDK3::ref_ptr<DirLight> dirLight;
   dirLight.alloc();
   dirLight->active = 1;
-  dirLight->dir[0] = 0.0001f;
+  dirLight->dir[0] = 1.0f;
   dirLight->dir[1] = 1.0f;
   dirLight->dir[2] = 0.0001f;
-  dirLight->diffuse_color[0] = 0.0f;
-  dirLight->diffuse_color[1] = 0.6f;
-  dirLight->diffuse_color[2] = 0.0f;
+  dirLight->diffuse_color[0] = 1.0f;
+  dirLight->diffuse_color[1] = 1.0f;
+  dirLight->diffuse_color[2] = 1.0f;
   dirLight->specular_color[0] = 1.0f;
   dirLight->specular_color[1] = 1.0f;
   dirLight->specular_color[2] = 1.0f;
