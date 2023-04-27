@@ -44,6 +44,7 @@ struct SpotLight
 uniform sampler2D u_diffuse_color;
 uniform sampler2D u_specular_color;
 uniform vec3 u_camera_position;
+uniform vec4 u_color;
 uniform float u_time;
 uniform DirLight u_dirLight;
 //uniform PointLight u_pointLight[4];
@@ -60,13 +61,13 @@ vec3 CalculeDirLight(vec3 view_dir) {
 
   //---Difuse---
   float diff = max(dot(s_normal, u_dirLight.dir), 0.0);
-  vec3 diffuse = diff * u_dirLight.diffuse_color;
+  vec3 diffuse = diff * u_dirLight.diffuse_color * u_color.xyz;
 
   //---Specular---
 
   vec3 reflectDir = normalize(reflect(-(u_dirLight.dir), normalize(s_normal))  );
   float spec = pow(max(dot(normalize(view_dir), normalize(reflectDir)), 0.0), u_dirLight.specular_shininess);
-  vec3 specular = u_dirLight.specular_strength * spec * u_dirLight.specular_color;
+  vec3 specular = u_dirLight.specular_strength * spec * u_dirLight.specular_color * u_color.xyz;
 
   return (diffuse + specular) * u_dirLight.active;
 }
@@ -77,12 +78,12 @@ vec3 CaluclePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos
 
   /*---Diffuse---*/
   float diff = max(dot(normal, lightDir), 0.0);
-  vec3 diffuse = light.diffuse_color * diff;
+  vec3 diffuse = light.diffuse_color * diff * u_color.xyz;
 
   /*---Specular---*/
   vec3 reflectDir = reflect(-lightDir, normal);
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), light.specular_shininess);
-  vec3 specular = (light.specular_strength * spec * light.specular_color);
+  vec3 specular = (light.specular_strength * spec * light.specular_color * u_color.xyz);
 
   /*---Attenuation---*/
   float distance = length(light.pos - fragPos);
@@ -137,12 +138,11 @@ void main() {
   float ambient_strength = 0.1;
   vec3 ambient_color = vec3(1.0);
   vec3 ambient = ambient_strength * ambient_color;
+  vec3 interlan_color = ambient;
 
-  vec3 color = ambient;
+  //interlan_color += CalculeDirLight(view_direction);
 
-  //color += CalculeDirLight(view_direction);
-
-  fragColor = vec4(CalculeDirLight(view_direction), 1.0);
+  fragColor = vec4(u_dirLight.diffuse_color, 1.0);
 
   //fragColor = vec4(0.0, 1.0, 0.0, 1.0);
 }

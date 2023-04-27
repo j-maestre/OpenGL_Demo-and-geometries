@@ -112,14 +112,22 @@ void MaterialCustom::init(const char* vertex_path, const char* fragment_path) {
   EDK3::dev::GPUManager::Instance()->newProgram(&program_);
   
   if (!LoadSourceFromFile(fragment_path, source, &error))
+  {
     printf("Error: %s", error.get());
+  }
   else
+  {
     fragment_shader->loadSource(EDK3::dev::Shader::kType_Fragment, source.get(), source.size());
+  }
   
   if (!LoadSourceFromFile(vertex_path, source, &error))
+  {
     printf("Error: %s", error.get());
+  }
   else
+  {
     vertex_shader->loadSource(EDK3::dev::Shader::kType_Vertex, source.get(), source.size());
+  }
 
   bool done = false;
   
@@ -163,11 +171,14 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
     uniform_att = program_->get_uniform_position("u_color");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_4, ms->color());
 
+    uniform_att = program_->get_uniform_position("u_camera_position");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, ms->get_cam_pos());
+    
     EDK3::ref_ptr<DirLight> light = ms->dir_light();
     uniform_att = program_->get_uniform_position("u_dirLight.active");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->active);
    
-    uniform_att = program_->get_uniform_position("u_dirLight.dir"); // Esto es lo unico que pilla la rata de cloaca
+    uniform_att = program_->get_uniform_position("u_dirLight.dir");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, light->dir);
     
     uniform_att = program_->get_uniform_position("u_dirLight.diffuse_color");
