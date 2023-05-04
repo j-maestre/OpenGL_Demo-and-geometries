@@ -143,5 +143,5 @@ void main() {
 
   color += CalculeDirLight(u_dirLight, s_normal, view_direction);
 
-  fragColor = vec4(color, 1.0);
+  fragColor = vec4(color, 0.5);
 }

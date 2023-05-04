@@ -46,7 +46,16 @@ void Oleaje(EDK3::ref_ptr<EDK3::TerrainCustom> terrain){
 void InitScene() {
   //Allocating root node:
   EDK3::Node* root = GameState.root.alloc();
-  
+
+  // Enable transparences
+  EDK3::dev::GPUManager::BlendParam src = EDK3::dev::GPUManager::BlendParam::kBlendParam_SourceAlpha;
+  EDK3::dev::GPUManager::BlendParam dst = EDK3::dev::GPUManager::BlendParam::kBlendParam_OneMinusSourceAlpha;
+  EDK3::dev::GPUManager::BlendOp op = EDK3::dev::GPUManager::BlendOp::kBlendOp_Add;
+  float blenWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+  float blenBlack[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+  EDK3::dev::GPUManager::Instance()->enableBlend(src, dst, op, blenBlack);
+
+
   // Create terrain
   EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
   terrain.alloc();
