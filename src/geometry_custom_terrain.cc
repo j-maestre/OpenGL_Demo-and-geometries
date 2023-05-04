@@ -45,6 +45,7 @@ namespace EDK3
         {
           vertex_buff[x + y * num_vertex_x].pos = {(float)(x - (num_vertex_x / 2)) * size, SimplexNoise::noise(((x - (num_vertex_x / 2)) * size) * 0.1f,((y - (num_vertex_y / 2)) * size) * 0.1f) * height_mult, (float)(y - (num_vertex_y / 2)) * size};
           vertex_buff[x + y * num_vertex_x].uv = {0.0f, 0.0f};
+          // TODO (Hector) Hacer UVs
         }
       }
     }
@@ -56,6 +57,7 @@ namespace EDK3
         {
           vertex_buff[x + y * num_vertex_x].pos = {(float)x * size, SimplexNoise::noise((x * size) * 0.1f, (y * size) * 0.1f) * height_mult, (float)y * size};
           vertex_buff[x + y * num_vertex_x].uv = {0.0f, 0.0f};
+          // TODO (Hector) Hacer UVs
         }
       }
     }
