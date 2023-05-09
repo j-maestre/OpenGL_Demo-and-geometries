@@ -40,10 +40,36 @@ const int kWindowHeight = 768;
 const int kTerrainWidth = 256;
 const int kTerrainHeight = 256;
 
+bool followBoat_ = true;
+ESAT::Vec3 boatPos = {0.0f, 5.0f, 0.0f};
 
-void Oleaje(EDK3::ref_ptr<EDK3::TerrainCustom> terrain){
 
+
+void MoveBoat(double dt){
+
+  ESAT::Vec3 direction = GameState.camera->direction();
+  float speed = GameState.camera->speed();
+
+  float pos[] = {boatPos.x, boatPos.y, boatPos.z};  
+
+  if(ESAT::IsKeyPressed('W')){
+    pos[0] += (direction.x * speed * dt);
+    pos[2] += (direction.z * speed * dt);
+
+    //this->set_position(pos);
+  }
+  if(ESAT::IsKeyPressed('S')){
+    pos[0] -= (direction.x * speed * dt);
+    pos[2] -= (direction.z * speed * dt);
+      //this->set_position(pos);
+  }
+
+  boatPos.x = pos[0];
+  boatPos.z = pos[2];
+  
 }
+
+
 
 void InitScene() {
   //Allocating root node:
@@ -127,7 +153,7 @@ void InitScene() {
 
   // Boat
   float boat_color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-  EDK3::ref_ptr<EDK3::MatDiffuseTexture::Settings> mat_sett_boat;
+  EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_boat;
   mat_sett_boat.alloc();
   mat_sett_boat->set_color(boat_color);
 
@@ -178,7 +204,7 @@ void InitScene() {
     drawable->set_geometry(boat[i].get());
     drawable->set_material(mat_boat.get());
     drawable->set_material_settings(mat_sett_boat.get());
-    drawable->set_position(0.0f, 5.0f, 0.0f);
+    drawable->set_position(boatPos.x, boatPos.y, boatPos.z);
     boat_node->addChild(drawable.get());
   }
   root->addChild(boat_node.get());
@@ -207,6 +233,7 @@ void InitScene() {
   GameState.camera->setSpeed(0.02f);
   GameState.camera->setSensitibity(1.0f);
   GameState.camera->initViewTarget(kWindowWidth,kWindowHeight);
+  GameState.camera->setFollowObject(boatPos);
 
   GameState.camera->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 1500.0f);
   mat_settings->set_camera_position(GameState.camera->position());
@@ -220,9 +247,20 @@ void UpdateFn(double dt) {
   GameState.camera->update(dt, kWindowWidth, kWindowHeight);
   GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
 
+  if(followBoat_){
+    MoveBoat(dt);
+    GameState.camera->setFollowObject(boatPos);
+
+  }
+
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
-  boat->set_scale(0.5f, 0.5f, 0.5f);
-  boat->set_rotation_xyz(ESAT::Time() * 0.005f, ESAT::Time() * 0.005f, ESAT::Time() * 0.005f);
+  boat->set_scale(0.01f, 0.01f, 0.01f);
+  boat->set_position(boatPos.x, boatPos.y, boatPos.z);
+
+  boat->set_rotation_z(90.0f);
+  boat->set_rotation_x(-90.0f);
+
+  //boat->set_rotation_xyz(ESAT::Time() * 0.005f, ESAT::Time() * 0.005f, ESAT::Time() * 0.005f);
   //boat->set_scale(0.2f, 0.2f, 0.2f);
 }
 
@@ -268,6 +306,9 @@ void ImGuiFn(double dt) {
     GameState.camera->setSensitibity(sensitivity);
 
   }
+
+  ImGui::Checkbox("Follow Boat",&followBoat_);
+  GameState.camera->following_ = followBoat_;
   ImGui::End();
   ImGui::Render();
 }

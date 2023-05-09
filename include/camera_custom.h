@@ -30,6 +30,8 @@ class CameraCustom : public EDK3::Camera {
   void setSpeed(const float speed);
   void setSensitibity(const float sensitivity);
 
+  void setFollowObject(ESAT::Vec3 pos);
+
   const bool enabled() const;
   float speed() const;
   float sensitivity() const;
@@ -39,6 +41,7 @@ class CameraCustom : public EDK3::Camera {
   //virtual void doCull(const Node* root_node) override;
   //virtual void doRender() const override;
 
+  bool following_;
  protected:
   virtual ~CameraCustom();
 
@@ -50,6 +53,8 @@ class CameraCustom : public EDK3::Camera {
   ESAT::Vec2 accum_mouse_offset_;
   ESAT::Vec3 view_dir_;
   ESAT::Vec2 last_mouse_pos_;
+
+  ESAT::Vec3 followingPosition_;
 
  private:
   CameraCustom(const CameraCustom&);
