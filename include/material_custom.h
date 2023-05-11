@@ -43,6 +43,9 @@ namespace EDK3 {
       void set_specular_texture(ref_ptr<Texture> texture) {specular_ = texture;}
       ref_ptr<Texture> get_diffuse_texture() const {return diffuse_;}
       ref_ptr<Texture> get_specular_texture() const {return specular_;}
+      void setResolution(float x, float y){resolutionX_ = x;resolutionY_ = y;};
+      float getResolutionX() const {return resolutionX_;};
+      float getResolutionY() const {return resolutionY_;};
     protected:
       virtual ~MaterialCustomSettings() {}
     private:
@@ -62,6 +65,8 @@ namespace EDK3 {
       ref_ptr<Texture> diffuse_;
       ref_ptr<Texture> specular_;
       ref_ptr<DirLight> dirLight_;
+      float resolutionX_;
+      float resolutionY_;
     }; //MaterialBasicSettings
 
 

@@ -193,6 +193,14 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
 
     uniform_att = program_->get_uniform_position("u_dirLight.specular_shininess");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->specular_shininess);
+
+    uniform_att = program_->get_uniform_position("u_resolution_x");
+    float x = ms->getResolutionX();
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &x);
+    
+    uniform_att = program_->get_uniform_position("u_resolution_y");
+    float y = ms->getResolutionY();
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &y);
     
 
     int texture_pos = 0;

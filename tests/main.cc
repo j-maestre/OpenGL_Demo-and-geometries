@@ -41,32 +41,36 @@ const int kTerrainWidth = 256;
 const int kTerrainHeight = 256;
 
 bool followBoat_ = true;
-ESAT::Vec3 boatPos = {0.0f, 5.0f, 0.0f};
+ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
 
 
 
 void MoveBoat(double dt){
 
   ESAT::Vec3 direction = GameState.camera->direction();
-  float speed = GameState.camera->speed();
+  float speed = GameState.camera->speed() * 0.5f;
 
   float pos[] = {boatPos.x, boatPos.y, boatPos.z};  
 
-  if(ESAT::IsKeyPressed('W')){
-    pos[0] += (direction.x * speed * dt);
-    pos[2] += (direction.z * speed * dt);
+  //if(ESAT::MouseButtonPressed(1)){
 
-    //this->set_position(pos);
-  }
-  if(ESAT::IsKeyPressed('S')){
-    pos[0] -= (direction.x * speed * dt);
-    pos[2] -= (direction.z * speed * dt);
+
+    if(ESAT::IsKeyPressed('W')){
+      pos[0] += (direction.x * speed * dt);
+      pos[2] += (direction.z * speed * dt);
+
       //this->set_position(pos);
-  }
+    }
+    if(ESAT::IsKeyPressed('S')){
+      pos[0] -= (direction.x * speed * dt);
+      pos[2] -= (direction.z * speed * dt);
+        //this->set_position(pos);
+    }
 
-  boatPos.x = pos[0];
-  boatPos.z = pos[2];
+    boatPos.x = pos[0];
+    boatPos.z = pos[2];
   
+  //}
 }
 
 
@@ -150,6 +154,7 @@ void InitScene() {
   water_mat_settings->set_diffuse_texture(w_texture);
   water_mat_settings->set_specular_texture(w_texture);
   water_mat_settings->set_color(water_color);
+  water_mat_settings->setResolution(kWindowWidth,kWindowHeight);
 
   // Boat
   float boat_color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -228,7 +233,10 @@ void InitScene() {
   float pos[] = { 0.0f, 4.0f, 40.0f };
   float view[] = { 0.0f, 0.0f, -6.0f };
   GameState.camera->set_position(pos);
-  GameState.camera->set_view_target(view);
+  
+  const float target[] = {boatPos.x,boatPos.y+5.0f,boatPos.z};
+  //GameState.camera->set_view_target(target);
+  GameState.camera->set_view_direction(target);
   GameState.camera->setEnabled(true);
   GameState.camera->setSpeed(0.02f);
   GameState.camera->setSensitibity(1.0f);
@@ -248,17 +256,22 @@ void UpdateFn(double dt) {
   GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
 
   if(followBoat_){
+    // Actualizamos la posicion del barco
     MoveBoat(dt);
+
+    // Le pasamos la nueva posicion a la camara
     GameState.camera->setFollowObject(boatPos);
+    const float target[] = {boatPos.x,boatPos.y+5.0f,boatPos.z};
+    GameState.camera->set_view_target(target);
 
   }
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
   boat->set_scale(0.01f, 0.01f, 0.01f);
-  boat->set_position(boatPos.x, boatPos.y, boatPos.z);
-
   boat->set_rotation_z(90.0f);
   boat->set_rotation_x(-90.0f);
+  boat->set_position(boatPos.x, boatPos.y, boatPos.z);
+
 
   //boat->set_rotation_xyz(ESAT::Time() * 0.005f, ESAT::Time() * 0.005f, ESAT::Time() * 0.005f);
   //boat->set_scale(0.2f, 0.2f, 0.2f);
@@ -309,6 +322,14 @@ void ImGuiFn(double dt) {
 
   ImGui::Checkbox("Follow Boat",&followBoat_);
   GameState.camera->following_ = followBoat_;
+
+  if(ImGui::CollapsingHeader("Boat")){
+    ImGui::Text("Position");
+    ImGui::DragFloat("X: ",&boatPos.x, 0.001f, -100.0f,100.0f, "%f");
+    ImGui::DragFloat("Y: ",&boatPos.y, 0.001f, -100.0f,100.0f, "%f");
+    ImGui::DragFloat("Z: ",&boatPos.z, 0.001f, -100.0f,100.0f, "%f");
+    
+  }
   ImGui::End();
   ImGui::Render();
 }
