@@ -174,6 +174,7 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
     uniform_att = program_->get_uniform_position("u_camera_position");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, ms->get_cam_pos());
     
+    // Dir Light
     EDK3::ref_ptr<DirLight> light = ms->dir_light();
     
     uniform_att = program_->get_uniform_position("u_dirLight.active");
@@ -193,6 +194,38 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
 
     uniform_att = program_->get_uniform_position("u_dirLight.specular_shininess");
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &light->specular_shininess);
+
+
+    // Point Light
+    EDK3::ref_ptr<PointLight> point = ms->point_light();
+    uniform_att = program_->get_uniform_position("u_pointLight.active");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->active);
+    
+    uniform_att = program_->get_uniform_position("u_pointLight.pos");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, point->pos);
+
+    //const float *prueba = point->diffuse_color;
+    uniform_att = program_->get_uniform_position("u_pointLight.diffuse_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, point->diffuse_color);
+
+    uniform_att = program_->get_uniform_position("u_pointLight.specular_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, point->specular_color);
+  
+    uniform_att = program_->get_uniform_position("u_pointLight.specular_strength");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->specular_strength);
+
+    uniform_att = program_->get_uniform_position("u_pointLight.specular_shininess");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->specular_shininess);
+    
+    uniform_att = program_->get_uniform_position("u_pointLight.constant_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->constant_att);
+    
+    uniform_att = program_->get_uniform_position("u_pointLight.linear_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->linear_att);
+    
+    uniform_att = program_->get_uniform_position("u_pointLight.quadratic_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->quadratic_att);
+
 
     uniform_att = program_->get_uniform_position("u_resolution_x");
     float x = ms->getResolutionX();

@@ -42,6 +42,9 @@ const int kTerrainHeight = 256;
 
 bool followBoat_ = true;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
+EDK3::ref_ptr<DirLight> dirLight;
+EDK3::ref_ptr<PointLight> pointLight;
+
 
 
 
@@ -91,7 +94,7 @@ void InitScene() {
   // Create terrain
   EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
   terrain.alloc();
-  terrain->init(kTerrainWidth, kTerrainHeight);
+  terrain->init(kTerrainWidth, kTerrainHeight, 0.5f);
 
   // Create water
   EDK3::ref_ptr<EDK3::TerrainCustom> water;
@@ -166,11 +169,10 @@ void InitScene() {
 
 
   // Lights
-  EDK3::ref_ptr<DirLight> dirLight;
   dirLight.alloc();
   dirLight->active = 1;
   dirLight->dir[0] = 1.0f;
-  dirLight->dir[1] = 1.0f;
+  dirLight->dir[1] = -0.91f;
   dirLight->dir[2] = 0.0001f;
   dirLight->diffuse_color[0] = 1.0f;
   dirLight->diffuse_color[1] = 1.0f;
@@ -180,8 +182,28 @@ void InitScene() {
   dirLight->specular_color[2] = 1.0f;
   dirLight->specular_strength = 1.0f;
   dirLight->specular_shininess = 1.0f;
+  
+  pointLight.alloc();
+  pointLight->active = 1;
+  pointLight->diffuse_color[0] = 1.0f;
+  pointLight->diffuse_color[1] = 0.0f;
+  pointLight->diffuse_color[2] = 0.0f;
+  pointLight->pos[0] = boatPos.x;
+  pointLight->pos[1] = boatPos.y +2.0f;
+  pointLight->pos[2] = boatPos.z;
+  pointLight->specular_color[0] = 1.0f;
+  pointLight->specular_color[1] = 1.0f;
+  pointLight->specular_color[2] = 1.0f;
+  pointLight->specular_strength = 0.003f;
+  pointLight->specular_shininess = 32.0f;
+  pointLight->constant_att = 2.37f;
+  pointLight->linear_att = -0.52f;
+  pointLight->quadratic_att = 0.045f;
+
   mat_settings->set_dir_light(dirLight);
   water_mat_settings->set_dir_light(dirLight);
+  mat_settings->set_point_light(pointLight);
+  water_mat_settings->set_point_light(pointLight);
   //mat_sett_boat->set_dir_light(dirLight);
 
   // Drawable
@@ -251,9 +273,9 @@ void InitScene() {
 }
 
 void UpdateFn(double dt) {
-  GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
+  GameState.camera->set_clear_color(1.0f, 1.0f, 0.75f, 1.0f);
   GameState.camera->update(dt, kWindowWidth, kWindowHeight);
-  GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
+  //GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
 
   if(followBoat_){
     // Actualizamos la posicion del barco
@@ -329,6 +351,40 @@ void ImGuiFn(double dt) {
     ImGui::DragFloat("Y: ",&boatPos.y, 0.001f, -100.0f,100.0f, "%f");
     ImGui::DragFloat("Z: ",&boatPos.z, 0.001f, -100.0f,100.0f, "%f");
     
+  }
+
+  if(ImGui::CollapsingHeader("Lights")){
+
+    if(ImGui::CollapsingHeader("Directional")){
+      ImGui::DragFloat("X: ",&dirLight->dir[0], 0.001f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Y: ",&dirLight->dir[1], 0.001f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Z: ",&dirLight->dir[2], 0.001f, -100.0f,100.0f, "%f");
+    }
+
+    if(ImGui::CollapsingHeader("Point")){
+      ImGui::Text("Point Boat");
+      ImGui::DragFloat("Position X: ",&pointLight->pos[0], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Position Y: ",&pointLight->pos[1], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Position Z: ",&pointLight->pos[2], 0.01f, -100.0f,100.0f, "%f");
+
+      ImGui::DragFloat("Constant ",&pointLight->constant_att, 0.005f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Linear ",&pointLight->linear_att, 0.005f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Quadratic ",&pointLight->quadratic_att, 0.005f, -100.0f,100.0f, "%f");
+      
+      ImGui::DragFloat("Specular shininess",&pointLight->specular_shininess, 0.001f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Specular Strenght ",&pointLight->specular_strength, 0.001f, -100.0f,100.0f, "%f");
+      if(ImGui::Button("Reset")){
+        pointLight->pos[0] = boatPos.x;
+        pointLight->pos[1] = boatPos.y +2.0f;
+        pointLight->pos[2] = boatPos.z;
+        pointLight->specular_strength = 0.8f;
+        pointLight->specular_shininess = 32.0f;
+        pointLight->constant_att = 1.0f;
+        pointLight->linear_att = 0.0014f;
+        pointLight->quadratic_att = 0.000007f;
+      }
+    }
+
   }
   ImGui::End();
   ImGui::Render();

@@ -35,9 +35,11 @@ namespace EDK3 {
       void set_color(const float v[4]) { memcpy(color_, v, sizeof(color_)); }
       const float* color() const { return color_; }
       void set_dir_light(ref_ptr<DirLight> dirLight) {dirLight_ = dirLight;}
+      void set_point_light(ref_ptr<PointLight> point) {pointLight_ = point;}
       void set_camera_position(const float *pos) {cam_pos_ = pos;}
       const float* get_cam_pos() const {return cam_pos_;}
       const ref_ptr<DirLight> dir_light() const { return dirLight_;}
+      const ref_ptr<PointLight> point_light() const { return pointLight_;}
 
       void set_diffuse_texture(ref_ptr<Texture> texture) {diffuse_ = texture;}
       void set_specular_texture(ref_ptr<Texture> texture) {specular_ = texture;}
@@ -65,6 +67,7 @@ namespace EDK3 {
       ref_ptr<Texture> diffuse_;
       ref_ptr<Texture> specular_;
       ref_ptr<DirLight> dirLight_;
+      ref_ptr<PointLight> pointLight_;
       float resolutionX_;
       float resolutionY_;
     }; //MaterialBasicSettings

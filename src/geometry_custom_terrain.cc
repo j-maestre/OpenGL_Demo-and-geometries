@@ -37,6 +37,10 @@ namespace EDK3
     
     vertex_buff.alloc(num_vertex_x * num_vertex_y);
     index_buff.alloc(6 * (num_cols * num_rows));
+
+    float delta_uv_x = 1.0f / num_vertex_x;
+    float delta_uv_y = 1.0f / num_vertex_y;
+
     if (is_centered)
     {
       for (int y = 0; y < num_vertex_y; y++)
@@ -44,8 +48,9 @@ namespace EDK3
         for (int x = 0; x < num_vertex_x; x++)
         {
           vertex_buff[x + y * num_vertex_x].pos = {(float)(x - (num_vertex_x / 2)) * size, SimplexNoise::noise(((x - (num_vertex_x / 2)) * size) * 0.1f,((y - (num_vertex_y / 2)) * size) * 0.1f) * height_mult, (float)(y - (num_vertex_y / 2)) * size};
-          vertex_buff[x + y * num_vertex_x].uv = {0.0f, 0.0f};
+          vertex_buff[x + y * num_vertex_x].uv = {delta_uv_x * x, delta_uv_y * y};
           // TODO (Hector) Hacer UVs
+
         }
       }
     }
@@ -56,7 +61,7 @@ namespace EDK3
         for (int x = 0; x < num_vertex_x; x++)
         {
           vertex_buff[x + y * num_vertex_x].pos = {(float)x * size, SimplexNoise::noise((x * size) * 0.1f, (y * size) * 0.1f) * height_mult, (float)y * size};
-          vertex_buff[x + y * num_vertex_x].uv = {0.0f, 0.0f};
+          vertex_buff[x + y * num_vertex_x].uv = {delta_uv_x * x, delta_uv_y * y};
           // TODO (Hector) Hacer UVs
         }
       }
