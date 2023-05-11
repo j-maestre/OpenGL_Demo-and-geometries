@@ -41,12 +41,18 @@ void main()
   //mat4 translate = InitAsTranslate(0.00001, 0.0001, 0.0001);
   mat4 model = u_model_matrix;
 
-  vec4 pos = (u_projection_matrix * u_view_matrix * model) * vec4(a_position, 1.0);
+  vec4 pos = model * vec4(a_position, 1.0);
+  gl_Position = (u_projection_matrix * u_view_matrix) * (vec4(pos.x, 
+                                                         pos.y + (sin(pos.x + (u_time * 0.001)) * 0.5),
+                                                         pos.z + (cos(pos.x) * 6.0),
+                                                         pos.w)); 
 
-  gl_Position = vec4(pos.x, pos.y + (sin(pos.y + (u_time * 0.001))), pos.z, pos.w);
+  //gl_Position = (u_projection_matrix * u_view_matrix * model) * vec4(a_position, 1.0);
+
+
   s_uv = a_uv;
   s_normal = mat3(model) * a_normal;
 
 
-  s_fragPos = vec3(model * vec4(a_position, 1.0));
+  s_fragPos = vec3(pos);
 }

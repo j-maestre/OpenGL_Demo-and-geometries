@@ -46,7 +46,10 @@ uniform sampler2D u_specular_color;
 uniform vec3 u_camera_position;
 uniform float u_time;
 uniform DirLight u_dirLight;
+uniform PointLight u_pointLight;
 uniform vec4 u_color;
+uniform float u_resolution_x;
+uniform float u_resolution_y;
 //uniform PointLight u_pointLight[4];
 //uniform SpotLight u_spotLight[4];
 
@@ -69,7 +72,8 @@ vec3 CalculeDirLight(DirLight light, vec3 normal, vec3 viewDir) {
   float spec = pow(max(dot(normalize(viewDir), normalize(reflectDir)), 0.0), light.specular_shininess);
   vec3 specular = light.specular_strength * spec * light.specular_color * u_color.xyz;
 
-  return (diffuse + specular);
+  //return (diffuse + specular * light.active);
+  return (diffuse * light.active);
 }
 
 vec3 CaluclePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos)
@@ -132,6 +136,35 @@ vec3 CalculeSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos)
   return (diffuse + specular);
 }
 
+
+float dPi = 6.2831;
+int maxIter = 5;
+
+
+vec3 CalculeWater(){
+  //vec2 resolution = vec2(u_resolution_x, u_resolution_y);
+  vec2 resolution = vec2(256.0 * 0.2);
+  vec2 uv = s_fragPos.xy / resolution.xy; // Aqui hay que pasarle las uv
+
+  vec2 p = mod(uv*dPi * 2.0, dPi)-250.0;
+
+  vec2 i = vec2(p);
+	float c = 1.0;
+	float inten = .005;
+
+	for (int n = 0; n < maxIter; n++){
+		float t = (u_time * 0.0001) * (1.0 - (3.5 / float(n+1)));
+		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+		c += 1.0/length(vec2(p.x / (sin(i.x+t)/inten),p.y / (cos(i.y+t)/inten)));
+	}
+
+  c /= float(maxIter);
+	c = 1.17-pow(c, 1.4);
+	vec3 colour = vec3(pow(abs(c), 8.0));
+  colour = clamp(colour + vec3(0.0, 0.35, 0.5), 0.0, 1.0);
+
+  return colour;
+}
 void main() { 
   vec3 view_direction = normalize(u_camera_position - s_fragPos);
 
@@ -141,7 +174,15 @@ void main() {
 
   vec3 color = ambient;
 
-  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  /*DirLight lightD = u_dirLight;
+  lightD.dir.x = cos(u_time * 0.001);
+  lightD.dir.y = sin(u_time * 0.001);*/
 
-  fragColor = vec4(color, 0.5);
+  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  color += CaluclePointLight(u_pointLight, s_normal, view_direction, s_fragPos);
+
+  vec3 waterColor = CalculeWater();
+  //fragColor = vec4(color, 0.6);
+  fragColor = vec4(waterColor*color,0.75);
+  
 }
