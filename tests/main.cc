@@ -23,9 +23,11 @@
 #include "EDK3/dev/gpumanager.h"
 #include "geometry_custom_terrain.h"
 #include "material_custom.h"
+#include "joystick.h"
 
 #include "ESAT_extra/imgui.h"
 #include "EDK3/dev/opengl.h"
+#include "EDK3/dev/glfw3.h"
 
 
 //Unnamed struct and it's unique instance:
@@ -40,10 +42,17 @@ const int kWindowHeight = 768;
 const int kTerrainWidth = 256;
 const int kTerrainHeight = 256;
 
-bool followBoat_ = true;
+bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
 EDK3::ref_ptr<DirLight> dirLight;
 EDK3::ref_ptr<PointLight> pointLight;
+EDK3::ref_ptr<Joystick> joystick;
+
+bool joystickAdded = false;
+int conected = -1;
+const float *axes;
+
+
 
 
 
@@ -76,6 +85,18 @@ void MoveBoat(double dt){
   //}
 }
 
+void ControllerSetUp(){
+  
+  conected = glfwJoystickPresent(0);
+  //  printf("Joystick %d\n",conected);
+
+  if(conected){
+    int axesCount;
+    axes = glfwGetJoystickAxes(0, &axesCount);
+  }
+
+}
+
 
 
 void InitScene() {
@@ -89,6 +110,8 @@ void InitScene() {
   float blenWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
   float blenBlack[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   EDK3::dev::GPUManager::Instance()->enableBlend(src, dst, op, blenBlack);
+
+  joystick.alloc();
 
 
   // Create terrain
@@ -258,12 +281,12 @@ void InitScene() {
   
   const float target[] = {boatPos.x,boatPos.y+5.0f,boatPos.z};
   //GameState.camera->set_view_target(target);
-  GameState.camera->set_view_direction(target);
+  GameState.camera->set_view_direction(view);
   GameState.camera->setEnabled(true);
   GameState.camera->setSpeed(0.02f);
   GameState.camera->setSensitibity(1.0f);
   GameState.camera->initViewTarget(kWindowWidth,kWindowHeight);
-  GameState.camera->setFollowObject(boatPos);
+  //GameState.camera->setFollowObject(boatPos);
 
   GameState.camera->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 1500.0f);
   mat_settings->set_camera_position(GameState.camera->position());
@@ -276,6 +299,11 @@ void UpdateFn(double dt) {
   GameState.camera->set_clear_color(1.0f, 1.0f, 0.75f, 1.0f);
   GameState.camera->update(dt, kWindowWidth, kWindowHeight);
   //GameState.camera->set_clear_color(0.94f, 1.0f, 0.94f, 1.0f);
+
+  //ControllerSetUp();
+  if(joystickAdded && joystick->isConected()){
+    joystick->getInput();
+  }
 
   if(followBoat_){
     // Actualizamos la posicion del barco
@@ -386,6 +414,31 @@ void ImGuiFn(double dt) {
     }
 
   }
+
+  // Joystick
+  if(!joystickAdded){
+    if(ImGui::Button("Add Controller")){
+      joystick->conect();
+      if(joystick->isConected()){
+        joystickAdded = true;
+        GameState.camera->joysticConected_ = true;
+        GameState.camera->joystick_ = joystick;
+      }
+    }
+  }
+
+  if(joystick->isConected()){
+    if(ImGui::CollapsingHeader("Joystick")){
+      ImGui::Text("Left X Axis %f",joystick->leftAxis_[0]);
+      ImGui::Text("Left Y Axis %f",joystick->leftAxis_[1]);
+      ImGui::Text("Right X Axis %f",joystick->rightAxis_[0]);
+      ImGui::Text("Right Y Axis %f",joystick->rightAxis_[1]);
+      ImGui::Text("Left Trigger/L2 %f",joystick->l2Trigger_);
+      ImGui::Text("Right Trigger/L2  %f",joystick->r2Trigger_);
+    }
+  }
+
+
   ImGui::End();
   ImGui::Render();
 }

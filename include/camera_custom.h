@@ -12,6 +12,7 @@
 
 #include "EDK3/camera.h"
 #include "ESAT/math.h"
+#include "joystick.h"
 
 
 namespace EDK3 {
@@ -42,6 +43,10 @@ class CameraCustom : public EDK3::Camera {
   //virtual void doRender() const override;
 
   bool following_;
+  bool joysticConected_;
+  EDK3::ref_ptr<Joystick> joystick_;
+  float joystickMovementSpeed_;
+
  protected:
   virtual ~CameraCustom();
 
@@ -53,8 +58,9 @@ class CameraCustom : public EDK3::Camera {
   ESAT::Vec2 accum_mouse_offset_;
   ESAT::Vec3 view_dir_;
   ESAT::Vec2 last_mouse_pos_;
-
   ESAT::Vec3 followingPosition_;
+
+  
 
  private:
   CameraCustom(const CameraCustom&);

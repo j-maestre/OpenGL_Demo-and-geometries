@@ -13,6 +13,8 @@ CameraCustom::CameraCustom(){
   accum_mouse_offset_ = {0.0f, 0.0f};
   last_mouse_pos_ = {0.0f, 0.0f};
   following_ = false;
+  joysticConected_ = false;
+  joystickMovementSpeed_ = 0.01f;
 }
 CameraCustom::CameraCustom(const CameraCustom& ){}
 CameraCustom::~CameraCustom(){}
@@ -33,15 +35,15 @@ void CameraCustom::initViewTarget(const float window_width, const float window_h
 
 void CameraCustom::update(const double delta_time, const float window_width, const float window_height){
 
-  bool pressed = ESAT::MouseButtonPressed(0);
-  //bool pressed = true;
-
+  bool clickPressed = ESAT::MouseButtonPressed(1);
 
   // Mouse rotation
-  if(ESAT::MouseButtonPressed(1)){
+  if(clickPressed || joysticConected_){
 
     accum_mouse_offset_.x += (float)ESAT::MousePositionX() - last_mouse_pos_.x;
     accum_mouse_offset_.y += ESAT::MousePositionY() - last_mouse_pos_.y;
+
+
 
     float omega = accum_mouse_offset_.x / window_width * oxml::Mathf::PI * 2.0f * sensitivity_;
     float alpha = accum_mouse_offset_.y / window_height * (oxml::Mathf::PI - oxml::Mathf::PI * 0.5f) * sensitivity_;
@@ -51,19 +53,38 @@ void CameraCustom::update(const double delta_time, const float window_width, con
     
     // Input movement
     if(!following_){
+
       const float *position = this->position();
-      if(ESAT::IsKeyPressed('W')){
-          float pos[] = {position[0] + (view_dir_.x * speed_ * delta_time), 
-                          position[1] + (view_dir_.y * speed_ * delta_time), 
-                          position[2] + (view_dir_.z * speed_ * delta_time)};
-          this->set_position(pos);
+
+      // Movement by keyboard
+      if(clickPressed){
+        if(ESAT::IsKeyPressed('W')){
+            float pos[] = {position[0] + (view_dir_.x * speed_ * delta_time), 
+                            position[1] + (view_dir_.y * speed_ * delta_time), 
+                            position[2] + (view_dir_.z * speed_ * delta_time)};
+            this->set_position(pos);
+        }
+        if(ESAT::IsKeyPressed('S')){
+            float pos[] = {position[0] - (view_dir_.x * speed_ * delta_time),
+                            position[1] - (view_dir_.y * speed_ * delta_time),
+                            position[2] - (view_dir_.z * speed_ * delta_time) };
+            this->set_position(pos);
+        }
       }
-      if(ESAT::IsKeyPressed('S')){
-          float pos[] = {position[0] - (view_dir_.x * speed_ * delta_time),
-                          position[1] - (view_dir_.y * speed_ * delta_time),
-                          position[2] - (view_dir_.z * speed_ * delta_time) };
-          this->set_position(pos);
+
+      // Movement by joystick
+      if(joysticConected_){
+        const float *position = this->position();
+          if(abs(joystick_->leftAxis_[1]) > 0.1f && joystick_->leftAxis_[1] >= -1.0f && joystick_->leftAxis_[1] <= 1.0f){ // Y axis
+              float pos[] = {position[0] -  (joystick_->leftAxis_[1] * view_dir_.x * delta_time * joystickMovementSpeed_), 
+                              position[1] - (joystick_->leftAxis_[1] * view_dir_.y * delta_time * joystickMovementSpeed_), 
+                              position[2] - (joystick_->leftAxis_[1] * view_dir_.z * delta_time * joystickMovementSpeed_)};
+              this->set_position(pos);
+          }
+          
       }
+
+
 
       // Sacar vec right con cross entre forward y up
 
@@ -72,18 +93,30 @@ void CameraCustom::update(const double delta_time, const float window_width, con
       oxml::Vec3 forward = {view_dir_.x, view_dir_.y, view_dir_.z};
       oxml::Vec3 rightDir = oxml::Vec3::Cross(upDir,forward);
 
-      if(ESAT::IsKeyPressed('D')){
-          float pos[] = {position[0] - (rightDir.x * speed_ * delta_time),
-                          position[1] - (rightDir.y * speed_ * delta_time),
-                          position[2] - (rightDir.z * speed_ * delta_time)};
-          this->set_position(pos);
-      }
-      if(ESAT::IsKeyPressed('A')){
-          float pos[] = {position[0] + (rightDir.x * speed_ * delta_time),
-                          position[1] + (rightDir.y * speed_ * delta_time),
-                          position[2] + (rightDir.z * speed_ * delta_time) };
+      // Movement by keyboard
+      if(clickPressed){
+        if(ESAT::IsKeyPressed('D')){
+            float pos[] = {position[0] - (rightDir.x * speed_ * delta_time),
+                            position[1] - (rightDir.y * speed_ * delta_time),
+                            position[2] - (rightDir.z * speed_ * delta_time)};
+            this->set_position(pos);
+        }
+        if(ESAT::IsKeyPressed('A')){
+            float pos[] = {position[0] + (rightDir.x * speed_ * delta_time),
+                            position[1] + (rightDir.y * speed_ * delta_time),
+                            position[2] + (rightDir.z * speed_ * delta_time) };
 
+            this->set_position(pos);
+        }
+      }
+
+      if(joysticConected_){
+         if(abs(joystick_->leftAxis_[0]) > 0.1f && joystick_->leftAxis_[0] >= -1.0f && joystick_->leftAxis_[0] <= 1.0f){
+          float pos[] = {position[0] - (joystick_->leftAxis_[0] * rightDir.x * joystickMovementSpeed_ * delta_time),
+                        position[1] - (joystick_->leftAxis_[0] * rightDir.y * joystickMovementSpeed_ * delta_time),
+                        position[2] - (joystick_->leftAxis_[0] * rightDir.z * joystickMovementSpeed_ * delta_time)};
           this->set_position(pos);
+         }
       }
 
     }
@@ -91,9 +124,12 @@ void CameraCustom::update(const double delta_time, const float window_width, con
       this->set_view_direction(&view_dir_.x);
     }
 
+
     const float* position = this->position();
     //printf("ViewDir X[%f] Y[%f] Z[%f] \n", view_dir_.x, view_dir_.y, view_dir_.z);
     //printf("Pos X[%f] Y[%f] Z[%f] \n", position[0],position[1], position[2]);
+
+  
 
     last_mouse_pos_.x = ESAT::MousePositionX();
     last_mouse_pos_.y = ESAT::MousePositionY();
