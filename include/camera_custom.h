@@ -46,6 +46,10 @@ class CameraCustom : public EDK3::Camera {
   bool joysticConected_;
   EDK3::ref_ptr<Joystick> joystick_;
   float joystickMovementSpeed_;
+  float joystickSensitivity_;
+  float turboSpeed_;
+  ESAT::Vec2 accum_joystick_offset_;
+  ESAT::Vec2 last_joystick_offset_;
 
  protected:
   virtual ~CameraCustom();

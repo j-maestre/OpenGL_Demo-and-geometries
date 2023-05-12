@@ -435,6 +435,13 @@ void ImGuiFn(double dt) {
       ImGui::Text("Right Y Axis %f",joystick->rightAxis_[1]);
       ImGui::Text("Left Trigger/L2 %f",joystick->l2Trigger_);
       ImGui::Text("Right Trigger/L2  %f",joystick->r2Trigger_);
+
+      ImGui::DragFloat("Right Dead Zone",&joystick->rightDeadZone_,0.001f,-1.0f,1.0f);
+      ImGui::DragFloat("Left Dead Zone",&joystick->leftDeadZone_,0.001f,-1.0f,1.0f);
+
+      ImGui::DragFloat("Movement Speed", &GameState.camera->joystickMovementSpeed_,0.005f,0.005f,1.0f);
+      ImGui::DragFloat("Sensitivity", &GameState.camera->joystickSensitivity_,0.01f,0.1f,20.0f);
+      ImGui::DragFloat("Turbo", &GameState.camera->turboSpeed_,0.01f,0.01f,1.0f);
     }
   }
 

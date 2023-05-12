@@ -15,6 +15,8 @@ CameraCustom::CameraCustom(){
   following_ = false;
   joysticConected_ = false;
   joystickMovementSpeed_ = 0.01f;
+  joystickSensitivity_ = 8.0f;
+  turboSpeed_ = 0.2f;
 }
 CameraCustom::CameraCustom(const CameraCustom& ){}
 CameraCustom::~CameraCustom(){}
@@ -30,6 +32,9 @@ void CameraCustom::initViewTarget(const float window_width, const float window_h
     //view_dir_ = { -0.1f, -0.2f, 0.001f };
     accum_mouse_offset_.x = 0.0001f;
     accum_mouse_offset_.y = 0.0001f;
+
+    accum_joystick_offset_.x = 0.0001f;
+    accum_joystick_offset_.y = 0.0001f;
     //set_view_direction(&view_dir_.x);
 }
 
@@ -43,10 +48,24 @@ void CameraCustom::update(const double delta_time, const float window_width, con
     accum_mouse_offset_.x += (float)ESAT::MousePositionX() - last_mouse_pos_.x;
     accum_mouse_offset_.y += ESAT::MousePositionY() - last_mouse_pos_.y;
 
+    float omega = 0.0f;
+    float alpha = 0.0f;
 
 
-    float omega = accum_mouse_offset_.x / window_width * oxml::Mathf::PI * 2.0f * sensitivity_;
-    float alpha = accum_mouse_offset_.y / window_height * (oxml::Mathf::PI - oxml::Mathf::PI * 0.5f) * sensitivity_;
+    if(joysticConected_ && joystick_->rightAxis_[0] >= -1.0f && joystick_->rightAxis_[0] <= 1.0f){
+      accum_joystick_offset_.x += joystick_->rightAxis_[0];
+      accum_joystick_offset_.y += joystick_->rightAxis_[1];
+
+      omega = accum_joystick_offset_.x / window_width * oxml::Mathf::PI * 2.0f * joystickSensitivity_;
+      alpha = accum_joystick_offset_.y / window_height * (oxml::Mathf::PI - oxml::Mathf::PI * 0.5f) * joystickSensitivity_;
+    }
+    
+    if(clickPressed){
+
+      omega = accum_mouse_offset_.x / window_width * oxml::Mathf::PI * 2.0f * sensitivity_;
+      alpha = accum_mouse_offset_.y / window_height * (oxml::Mathf::PI - oxml::Mathf::PI * 0.5f) * sensitivity_;
+    }
+    
     view_dir_ = {cosf(alpha) * cosf(omega),
                 -sinf(alpha),
                 cosf(alpha) * sinf(omega)};
@@ -75,10 +94,11 @@ void CameraCustom::update(const double delta_time, const float window_width, con
       // Movement by joystick
       if(joysticConected_){
         const float *position = this->position();
-          if(abs(joystick_->leftAxis_[1]) > 0.1f && joystick_->leftAxis_[1] >= -1.0f && joystick_->leftAxis_[1] <= 1.0f){ // Y axis
-              float pos[] = {position[0] -  (joystick_->leftAxis_[1] * view_dir_.x * delta_time * joystickMovementSpeed_), 
-                              position[1] - (joystick_->leftAxis_[1] * view_dir_.y * delta_time * joystickMovementSpeed_), 
-                              position[2] - (joystick_->leftAxis_[1] * view_dir_.z * delta_time * joystickMovementSpeed_)};
+          if(abs(joystick_->leftAxis_[1]) > joystick_->leftDeadZone_ && joystick_->leftAxis_[1] >= -1.0f && joystick_->leftAxis_[1] <= 1.0f){ // Y axis
+              float turbo =  (joystickMovementSpeed_ + ((joystick_->r2Trigger_ * 0.5f + 0.5f)) * turboSpeed_);
+              float pos[] = {position[0] -  (joystick_->leftAxis_[1] * view_dir_.x * delta_time * turbo), 
+                              position[1] - (joystick_->leftAxis_[1] * view_dir_.y * delta_time * turbo), 
+                              position[2] - (joystick_->leftAxis_[1] * view_dir_.z * delta_time * turbo)};
               this->set_position(pos);
           }
           
@@ -110,11 +130,14 @@ void CameraCustom::update(const double delta_time, const float window_width, con
         }
       }
 
+      // Movement by controller
       if(joysticConected_){
-         if(abs(joystick_->leftAxis_[0]) > 0.1f && joystick_->leftAxis_[0] >= -1.0f && joystick_->leftAxis_[0] <= 1.0f){
-          float pos[] = {position[0] - (joystick_->leftAxis_[0] * rightDir.x * joystickMovementSpeed_ * delta_time),
-                        position[1] - (joystick_->leftAxis_[0] * rightDir.y * joystickMovementSpeed_ * delta_time),
-                        position[2] - (joystick_->leftAxis_[0] * rightDir.z * joystickMovementSpeed_ * delta_time)};
+         if(abs(joystick_->leftAxis_[0]) > joystick_->leftDeadZone_ && joystick_->leftAxis_[0] >= -1.0f && joystick_->leftAxis_[0] <= 1.0f){
+          float turbo =  (joystickMovementSpeed_ + ((joystick_->r2Trigger_ * 0.5f + 0.5f)) * turboSpeed_);
+
+          float pos[] = {position[0] - (joystick_->leftAxis_[0] * rightDir.x * delta_time * turbo),
+                         position[1] - (joystick_->leftAxis_[0] * rightDir.y * delta_time * turbo),
+                         position[2] - (joystick_->leftAxis_[0] * rightDir.z * delta_time * turbo)};
           this->set_position(pos);
          }
       }
@@ -133,6 +156,12 @@ void CameraCustom::update(const double delta_time, const float window_width, con
 
     last_mouse_pos_.x = ESAT::MousePositionX();
     last_mouse_pos_.y = ESAT::MousePositionY();
+
+    if(joysticConected_){
+      last_joystick_offset_.x = oxml::Mathf::Clamp(abs(joystick_->rightAxis_[0]),joystick_->rightDeadZone_,1.0f) * oxml::Mathf::Sign(joystick_->rightAxis_[0]);
+      last_joystick_offset_.y = oxml::Mathf::Clamp(abs(joystick_->rightAxis_[1]),joystick_->rightDeadZone_,1.0f) * oxml::Mathf::Sign(joystick_->rightAxis_[1]);
+    }
+  
 
   }
 

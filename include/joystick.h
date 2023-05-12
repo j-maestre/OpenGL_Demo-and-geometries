@@ -29,6 +29,9 @@ class Joystick: public EDK3::Referenced{
         float r2Trigger_;
         bool conected_;
 
+        float rightDeadZone_;
+        float leftDeadZone_;
+
     protected:
 
         const float *axes_;

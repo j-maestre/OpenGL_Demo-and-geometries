@@ -61,4 +61,14 @@ namespace oxml {
     return y;
   }
 
+  inline float Mathf::Sign(float number)
+  {
+    if (number >= 0.0f)
+    {
+      return 1.0f;
+    } else {
+      return -1.0f;
+    }
+  }
+
 }

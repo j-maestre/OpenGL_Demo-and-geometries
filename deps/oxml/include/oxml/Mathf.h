@@ -26,6 +26,7 @@ namespace oxml {
     static float FloatModule(float a, float b);
     static float Round(float value);
     static float rsqrt(float number);
+    static float Sign(float number);
 
   };
 
