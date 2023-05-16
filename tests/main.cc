@@ -44,8 +44,10 @@ const int kTerrainHeight = 256;
 
 bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
+ESAT::Vec3 faroPos = {40.0f, -27.127f, 45.9f};
 EDK3::ref_ptr<DirLight> dirLight;
 EDK3::ref_ptr<PointLight> pointLight;
+EDK3::ref_ptr<SpotLight> spotLight;
 EDK3::ref_ptr<Joystick> joystick;
 
 bool joystickAdded = false;
@@ -130,6 +132,13 @@ void InitScene() {
   if(!boat.get()){
     printf("No hay BOAT OBJ!!!\n");
   }
+  
+  // Create faro
+  EDK3::scoped_array<EDK3::ref_ptr<EDK3::Geometry>> faro;
+  EDK3::LoadObj("./test/faro/faro.obj", &faro, nullptr);
+  if(!faro.get()){
+    printf("No hay FARO OBJ!!!\n");
+  }
 
 
 
@@ -146,6 +155,9 @@ void InitScene() {
   mat_boat.alloc();
   //mat_boat->init("./test/boat/boat_vertex.shader", "./test/boat/boat_fragment.shader");
 
+  EDK3::ref_ptr<EDK3::MatDiffuse> mat_faro;
+  mat_faro.alloc();
+
 
 
 
@@ -160,6 +172,13 @@ void InitScene() {
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &b_texture);
   if(!b_texture){
+    printf("No hay textura del boat!!!\n");
+  }
+  
+  EDK3::ref_ptr<EDK3::Texture> f_texture;
+  //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
+  EDK3::Texture::Load("./test/T_EDK_Logo.png", &f_texture);
+  if(!f_texture){
     printf("No hay textura del boat!!!\n");
   }
 
@@ -187,6 +206,12 @@ void InitScene() {
   EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_boat;
   mat_sett_boat.alloc();
   mat_sett_boat->set_color(boat_color);
+  
+  // Faro
+  float faro_color[4] = {0.0f, 0.5f, 0.5f, 1.0f};
+  EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_faro;
+  mat_sett_faro.alloc();
+  mat_sett_faro->set_color(faro_color);
 
 
 
@@ -223,10 +248,34 @@ void InitScene() {
   pointLight->linear_att = -0.52f;
   pointLight->quadratic_att = 0.045f;
 
+  spotLight.alloc();
+  spotLight->active = 1;
+  spotLight->pos[0] = faroPos.x;
+  spotLight->pos[1] = faroPos.y + 10.0f;
+  spotLight->pos[2] = faroPos.z;
+  spotLight->dir[0] = 1.0f;
+  spotLight->dir[1] = 0.0f;
+  spotLight->dir[2] = 0.0f;
+  spotLight->cutt_off = 1.0f;
+  spotLight->diffuse_color[0] = 1.0f;
+  spotLight->diffuse_color[1] = 1.0f;
+  spotLight->diffuse_color[2] = 1.0f;
+  spotLight->specular_color[2] = 1.0f;
+  spotLight->specular_color[2] = 1.0f;
+  spotLight->specular_color[2] = 1.0f;
+  spotLight->specular_strength = 0.003f;
+  spotLight->specular_shininess = 32.0f;
+  spotLight->constant_att = 2.37f;
+  spotLight->linear_att = -0.52f;
+  spotLight->quadratic_att = 0.045f;
+
+
   mat_settings->set_dir_light(dirLight);
   water_mat_settings->set_dir_light(dirLight);
   mat_settings->set_point_light(pointLight);
   water_mat_settings->set_point_light(pointLight);
+  mat_settings->set_spot_light(spotLight);
+  water_mat_settings->set_spot_light(spotLight);
   //mat_sett_boat->set_dir_light(dirLight);
 
   // Drawable
@@ -258,6 +307,20 @@ void InitScene() {
     boat_node->addChild(drawable.get());
   }
   root->addChild(boat_node.get());
+  
+  // Faro
+  EDK3::ref_ptr<EDK3::Node> faro_node;
+  
+  faro_node.alloc();
+  for(int i = 0; i < faro.size(); i++){
+    drawable.alloc();
+    drawable->set_geometry(faro[i].get());
+    drawable->set_material(mat_faro.get());
+    drawable->set_material_settings(mat_sett_faro.get());
+    drawable->set_position(faroPos.x, faroPos.y, faroPos.z);
+    faro_node->addChild(drawable.get());
+  }
+  root->addChild(faro_node.get());
   
 
   // Water
@@ -322,6 +385,8 @@ void UpdateFn(double dt) {
   boat->set_rotation_x(-90.0f);
   boat->set_position(boatPos.x, boatPos.y, boatPos.z);
 
+  EDK3::ref_ptr<EDK3::Node> faro = GameState.root->child(2);
+  faro->set_position(faroPos.x, faroPos.y, faroPos.z);
 
   //boat->set_rotation_xyz(ESAT::Time() * 0.005f, ESAT::Time() * 0.005f, ESAT::Time() * 0.005f);
   //boat->set_scale(0.2f, 0.2f, 0.2f);
@@ -375,9 +440,17 @@ void ImGuiFn(double dt) {
 
   if(ImGui::CollapsingHeader("Boat")){
     ImGui::Text("Position");
-    ImGui::DragFloat("X: ",&boatPos.x, 0.001f, -100.0f,100.0f, "%f");
-    ImGui::DragFloat("Y: ",&boatPos.y, 0.001f, -100.0f,100.0f, "%f");
-    ImGui::DragFloat("Z: ",&boatPos.z, 0.001f, -100.0f,100.0f, "%f");
+    ImGui::DragFloat("Boat X: ",&boatPos.x, 0.001f, -1000.0f,1000.0f, "%f");
+    ImGui::DragFloat("Boat Y: ",&boatPos.y, 0.001f, -1000.0f,1000.0f, "%f");
+    ImGui::DragFloat("Boat Z: ",&boatPos.z, 0.001f, -1000.0f,1000.0f, "%f");
+    
+  }
+  
+  if(ImGui::CollapsingHeader("Faro")){
+    ImGui::Text("Position");
+    ImGui::DragFloat("Faro X: ",&faroPos.x, 0.1f, -1000.0f,1000.0f, "%f");
+    ImGui::DragFloat("Faro Y: ",&faroPos.y, 0.1f, -1000.0f,1000.0f, "%f");
+    ImGui::DragFloat("Faro Z: ",&faroPos.z, 0.1f, -1000.0f,1000.0f, "%f");
     
   }
 
@@ -411,6 +484,32 @@ void ImGuiFn(double dt) {
         pointLight->linear_att = 0.0014f;
         pointLight->quadratic_att = 0.000007f;
       }
+    }
+    
+    if(ImGui::CollapsingHeader("Spot")){
+      ImGui::Text("Spot faro");
+      ImGui::DragFloat("Position X: ",&spotLight->pos[0], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Position Y: ",&spotLight->pos[1], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Position Z: ",&spotLight->pos[2], 0.01f, -100.0f,100.0f, "%f");
+
+      ImGui::DragFloat("Constant ",&spotLight->constant_att, 0.005f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Linear ",&spotLight->linear_att, 0.005f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Quadratic ",&spotLight->quadratic_att, 0.005f, -100.0f,100.0f, "%f");
+      
+      ImGui::DragFloat("Specular shininess",&spotLight->specular_shininess, 0.001f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Specular Strenght ",&spotLight->specular_strength, 0.001f, -100.0f,100.0f, "%f");
+      if(ImGui::Button("Reset")){
+        spotLight->pos[0] = faroPos.x;
+        spotLight->pos[1] = faroPos.y +10.0f;
+        spotLight->pos[2] = faroPos.z;
+        spotLight->specular_strength = 0.003f;
+        spotLight->specular_shininess = 32.0f;
+        spotLight->constant_att = 2.37f;
+        spotLight->linear_att = -0.52f;
+        spotLight->quadratic_att = 0.045f;
+      }
+
+      
     }
 
   }

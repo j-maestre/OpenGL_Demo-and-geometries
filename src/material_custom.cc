@@ -227,6 +227,42 @@ bool MaterialCustom::enable(const EDK3::MaterialSettings *mat) const {
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &point->quadratic_att);
 
 
+    // Spot Light
+    EDK3::ref_ptr<SpotLight> spot = ms->spot_light();
+    uniform_att = program_->get_uniform_position("u_spotLight.active");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->active);
+
+    uniform_att = program_->get_uniform_position("u_spotLight.pos");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, spot->pos);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.dir");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, spot->dir);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.cutt_off");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->cutt_off);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.diffuse_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, spot->diffuse_color);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.specular_color");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT_3, spot->specular_color);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.specular_strength");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->specular_strength);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.specular_shininess");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->specular_shininess);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.constant_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->constant_att);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.linear_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->linear_att);
+    
+    uniform_att = program_->get_uniform_position("u_spotLight.quadratic_att");
+    program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &spot->quadratic_att);
+
+
     uniform_att = program_->get_uniform_position("u_resolution_x");
     float x = ms->getResolutionX();
     program_->set_uniform_value(uniform_att, EDK3::Type::T_FLOAT, &x);
