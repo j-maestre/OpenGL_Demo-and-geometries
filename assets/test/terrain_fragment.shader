@@ -47,6 +47,7 @@ uniform vec3 u_camera_position;
 uniform float u_time;
 uniform DirLight u_dirLight;
 uniform PointLight u_pointLight;
+uniform SpotLight u_spotLight;
 uniform vec4 u_color;
 //uniform PointLight u_pointLight[4];
 //uniform SpotLight u_spotLight[4];
@@ -168,9 +169,9 @@ void main() {
 
   vec3 color = ambient;
 
-  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
-  color += CalculePointLightXema(u_pointLight, s_normal, view_direction, s_fragPos);
-
+  //color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  //color += CalculePointLightXema(u_pointLight, s_normal, view_direction, s_fragPos);
+  color += CalculeSpotLight(u_spotLight, s_normal, view_direction, s_fragPos);
   //fragColor = vec4(color, 1.0);
   //fragColor = vec4(s_uv, 0.0, 1.0);
   fragColor = vec4(color, 1.0);

@@ -47,6 +47,7 @@ uniform vec3 u_camera_position;
 uniform float u_time;
 uniform DirLight u_dirLight;
 uniform PointLight u_pointLight;
+uniform SpotLight u_spotLight;
 uniform vec4 u_color;
 uniform float u_resolution_x;
 uniform float u_resolution_y;
@@ -178,8 +179,9 @@ void main() {
   lightD.dir.x = cos(u_time * 0.001);
   lightD.dir.y = sin(u_time * 0.001);*/
 
-  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
-  color += CaluclePointLight(u_pointLight, s_normal, view_direction, s_fragPos);
+  //color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  //color += CaluclePointLight(u_pointLight, s_normal, view_direction, s_fragPos);
+  color += CalculeSpotLight(u_spotLight, s_normal, view_direction, s_fragPos);
 
   vec3 waterColor = CalculeWater();
   //fragColor = vec4(color, 0.6);
