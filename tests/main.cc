@@ -138,7 +138,7 @@ void InitScene() {
   // Create terrain
   EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
   terrain.alloc();
-  terrain->init(kTerrainWidth, kTerrainHeight, 0.5f);
+  terrain->init(kTerrainWidth, kTerrainHeight, 1.2f);
 
   // Create water
   EDK3::ref_ptr<EDK3::TerrainCustom> water;
@@ -233,7 +233,7 @@ void InitScene() {
   // Material custom settings
 
   // Terrain
-  float terrain_color[4] = {0.5f, 1.0f, 0.5f, 1.0f};
+  float terrain_color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> mat_settings;
   mat_settings.alloc();
   mat_settings->set_diffuse_texture(t_texture);
@@ -241,7 +241,7 @@ void InitScene() {
   mat_settings->set_color(terrain_color);
 
   // Water
-  float water_color[4] = {0.5f, 0.5f, 1.0f, 1.0f};
+  float water_color[4] = {0.0f, 0.0f, 1.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> water_mat_settings;
   water_mat_settings.alloc();
   water_mat_settings->set_diffuse_texture(w_texture);
@@ -280,7 +280,7 @@ void InitScene() {
   dirLight.alloc();
   dirLight->active = 1;
   dirLight->dir[0] = 1.0f;
-  dirLight->dir[1] = 0.12f;
+  dirLight->dir[1] = 0.6f;
   dirLight->dir[2] = 0.5f;
   dirLight->diffuse_color[0] = 1.0f;
   dirLight->diffuse_color[1] = 1.0f;
@@ -506,7 +506,7 @@ void SetLightToBolinga(){
     spotLight->pos[2] = sphere_worl_pos[2];
 
     //spotLight->dir[0] = pivot_rotation[0];
-    //spotLight->dir[1] = pivot_rotation[1];
+    spotLight->dir[1] = sinf(pivot_rotation[1]);
     //spotLight->dir[2] = pivot_rotation[2];
 
     // padre * hijo y me da la matrix model del hijo en mundo, la multiplico por vec4(0,0,0,1) y me da la posicion del hijo en mundo

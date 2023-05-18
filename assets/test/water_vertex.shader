@@ -43,9 +43,9 @@ void main()
 
   vec4 pos = model * vec4(a_position, 1.0);
   gl_Position = (u_projection_matrix * u_view_matrix) * (vec4(pos.x, 
-                                                         pos.y + (sin(pos.x + (u_time * 0.001)) * 0.5),
-                                                         pos.z + (cos(pos.x) * 6.0),
-                                                         pos.w)); 
+                                                              pos.y + (sin(pos.x + (u_time * 0.001)) * 0.5),
+                                                              pos.z + (cos(pos.x + u_time * 0.0005) * 6.0),
+                                                              pos.w)); 
 
   //gl_Position = (u_projection_matrix * u_view_matrix * model) * vec4(a_position, 1.0);
 
