@@ -25,6 +25,12 @@
 #include "geometry_custom_sphere.h"
 #include "material_custom.h"
 #include "joystick.h"
+#include "oxml/Mat4.h"
+#include "oxml/Vec3.h"
+#include "oxml/Vec4.h"
+#include "cubemap_material.h"
+#include "custom_gpu_cubemap.h"
+#include "geometry_custom_cube.h"
 
 #include "ESAT_extra/imgui.h"
 #include "EDK3/dev/opengl.h"
@@ -36,6 +42,15 @@ struct {
   EDK3::ref_ptr<EDK3::CameraCustom> camera;
   EDK3::ref_ptr<EDK3::Node> root;
 } GameState;
+
+std::vector<std::string> cube_map_tex = {
+  "./test/skybox/right.jpg",
+  "./test/skybox/left.jpg",
+  "./test/skybox/top.jpg",
+  "./test/skybox/bottom.jpg",
+  "./test/skybox/front.jpg",
+  "./test/skybox/back.jpg",
+};
 
 const int kWindowWidth = 1024;
 const int kWindowHeight = 768;
@@ -58,6 +73,8 @@ const float *axes;
 bool rotate_spot_light = true;
 float rotation_speed = 5.0f;
 
+float sphere_pivot[3];
+float sphere_pos[3] = {0.0f, 0.0f, 0.0f};
 
 
 
@@ -145,6 +162,15 @@ void InitScene() {
   sphere.alloc();
   sphere->init(3.0f);
 
+  // Create cube map
+  EDK3::ref_ptr<CustomGPUCubeMap> cube_map;
+  cube_map.alloc();
+  cube_map->init(cube_map_tex);
+
+  EDK3::ref_ptr<EDK3::CubeCustom> cube_geo;
+  cube_geo.alloc();
+  cube_geo->init(1.0f, false, true);
+
 
   // Create material
 
@@ -171,6 +197,11 @@ void InitScene() {
   EDK3::ref_ptr<EDK3::MaterialCustom> mat_sphere;
   mat_sphere.alloc();
   mat_sphere->init("./test/sphere_vertex.shader","./test/sphere_fragment.shader");
+
+  // Cube Map
+  EDK3::ref_ptr<EDK3::MaterialCubeMap> mat_custom;
+  mat_custom.alloc();
+  mat_custom->init("./test/cubemap.vs", "./test/cubemap.fs");
 
 
   // Create texture
@@ -200,7 +231,7 @@ void InitScene() {
   // Material custom settings
 
   // Terrain
-  float terrain_color[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+  float terrain_color[4] = {0.5f, 1.0f, 0.5f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> mat_settings;
   mat_settings.alloc();
   mat_settings->set_diffuse_texture(t_texture);
@@ -208,7 +239,7 @@ void InitScene() {
   mat_settings->set_color(terrain_color);
 
   // Water
-  float water_color[4] = {0.0f, 0.0f, 1.0f, 1.0f};
+  float water_color[4] = {0.5f, 0.5f, 1.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> water_mat_settings;
   water_mat_settings.alloc();
   water_mat_settings->set_diffuse_texture(w_texture);
@@ -232,10 +263,15 @@ void InitScene() {
   mat_sett_boat->set_color(boat_color);
   
   // Faro
-  float faro_color[4] = {0.0f, 0.5f, 0.5f, 1.0f};
+  float faro_color[4] = {0.5f, 0.5f, 0.5f, 1.0f};
   EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_faro;
   mat_sett_faro.alloc();
   mat_sett_faro->set_color(faro_color);
+
+  // Cube Map
+  EDK3::ref_ptr<EDK3::MaterialCubeMap::Settings> mat_custom_settings;
+  mat_custom_settings.alloc();
+  mat_custom_settings->set_cube_map(cube_map);
 
 
   // Lights
@@ -312,8 +348,6 @@ void InitScene() {
 
   // Drawable
   EDK3::ref_ptr<EDK3::Drawable> node;
-  EDK3::ref_ptr<EDK3::Node> root_2;
-  root_2.alloc();
 
   // Terrain
   node.alloc();
@@ -355,14 +389,37 @@ void InitScene() {
   root->addChild(faro_node.get());
 
   // Sphere
-  node.alloc();
-  node->set_geometry(sphere.get());
-  node->set_material(mat_sphere.get());
-  node->set_material_settings(sphere_mat_settings.get());
-  node->set_position(-100.0f, 10.53f, 8.23f);
-  root->addChild(node.get());
+  EDK3::ref_ptr<EDK3::Drawable> sphere_drawable;
+  EDK3::ref_ptr<EDK3::Node> sphere_node;
+  sphere_pos[0] = 9.0f;
+  sphere_drawable.alloc();
+  sphere_drawable->set_geometry(sphere.get());
+  sphere_drawable->set_material(mat_sphere.get());
+  sphere_drawable->set_material_settings(sphere_mat_settings.get());
+  sphere_drawable->set_position(sphere_pos[0], sphere_pos[1], sphere_pos[2]);
 
-  
+  // Sphere pivot
+  sphere_pivot[0] = -100.0f;
+  sphere_pivot[1] = 40.73f;
+  sphere_pivot[2] = 3.13f;
+
+  sphere_node.alloc();
+  sphere_node->set_position(sphere_pivot[0], sphere_pivot[1], sphere_pivot[2]);
+  sphere_node->addChild(sphere_drawable.get());
+    
+  root->addChild(sphere_node.get());
+
+
+    EDK3::ref_ptr<EDK3::Drawable> cube;
+    cube.alloc();
+    cube->set_geometry(cube_geo.get());
+    cube->set_position(1.0f, 0.0f, -3.0);
+    cube->set_scale(1.0f, 1.0f, 1.0f);
+    cube->set_material(mat_custom.get());
+    cube->set_material_settings(mat_custom_settings.get());
+    cube->set_HPR(0.0f, 0.0f, 0.0f);
+    root->addChild(cube.get());
+
 
   // Water
   node.alloc();
@@ -400,6 +457,57 @@ void InitScene() {
   EDK3::dev::GPUManager::CheckGLError("Prepare END");
 }
 
+void SetLightToBolinga(){
+    
+    EDK3::ref_ptr<EDK3::Node> sphere_center = GameState.root->child(3);
+
+    EDK3::ref_ptr<EDK3::Node> sphere = sphere_center->child(0);
+    sphere->set_position(sphere_pos[0],sphere_pos[1],sphere_pos[2]);
+
+    // Pivot values
+    const float *pivot_escale = sphere_center->scale();
+    const float *pivot_rotation = sphere_center->rotation_xyz();
+    const float *pivot_position = sphere_center->position();
+    oxml::Vec3 pi_scale = oxml::Vec3(pivot_escale[0],pivot_escale[1],pivot_escale[2]);
+    oxml::Vec3 pi_rotation = oxml::Vec3(pivot_rotation[0],pivot_rotation[1],pivot_rotation[2]);
+    oxml::Vec3 pi_position = oxml::Vec3(pivot_position[0],pivot_position[1],pivot_position[2]);
+
+    // Sphere values
+    const float *sphere_scale = sphere->scale();
+    const float *sphere_rotation = sphere->rotation_xyz();
+    const float *sphere_position = sphere->position();
+    oxml::Vec3 sph_scale = oxml::Vec3(sphere_scale[0],sphere_scale[1],sphere_scale[2]);
+    oxml::Vec3 sph_rotation = oxml::Vec3(sphere_rotation[0],sphere_rotation[1],sphere_rotation[2]);
+    oxml::Vec3 sph_position = oxml::Vec3(sphere_position[0],sphere_position[1],sphere_position[2]);
+
+    // Pivot model matrix
+    oxml::Mat4 pivot_identity = oxml::Mat4::Identity();
+    pivot_identity = pivot_identity.Multiply(oxml::Mat4::Scale(pi_scale));
+    pivot_identity = pivot_identity.Multiply(oxml::Mat4::RotateX(pi_rotation[0]));
+    pivot_identity = pivot_identity.Multiply(oxml::Mat4::RotateY(pi_rotation[1]));
+    pivot_identity = pivot_identity.Multiply(oxml::Mat4::RotateZ(pi_rotation[2]));
+    pivot_identity = pivot_identity.Multiply(oxml::Mat4::Translate(pi_position));
+    
+    // Sphere model matrix
+    oxml::Mat4 sphere_identity = oxml::Mat4::Identity();
+    sphere_identity = sphere_identity.Multiply(oxml::Mat4::Scale(sph_scale));
+    sphere_identity = sphere_identity.Multiply(oxml::Mat4::RotateX(sph_rotation[0]));
+    sphere_identity = sphere_identity.Multiply(oxml::Mat4::RotateY(sph_rotation[1]));
+    sphere_identity = sphere_identity.Multiply(oxml::Mat4::RotateZ(sph_rotation[2]));
+    sphere_identity = sphere_identity.Multiply(oxml::Mat4::Translate(sph_position));
+
+    // Sphere model matrix in world position
+    oxml::Mat4 sphere_world_model = pivot_identity.Multiply(sphere_identity);
+    oxml::Vec4 sphere_worl_pos = sphere_world_model * oxml::Vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    spotLight->pos[0] = sphere_worl_pos[0];
+    spotLight->pos[1] = sphere_worl_pos[1];
+    spotLight->pos[2] = sphere_worl_pos[2];
+
+    // padre * hijo y me da la matrix model del hijo en mundo, la multiplico por vec4(0,0,0,1) y me da la posicion del hijo en mundo
+
+}
+
 void UpdateFn(double dt) {
   GameState.camera->set_clear_color(1.0f, 1.0f, 0.75f, 1.0f);
   GameState.camera->update(dt, kWindowWidth, kWindowHeight);
@@ -425,9 +533,13 @@ void UpdateFn(double dt) {
     spotLight->dir[2] = sinf(ESAT::Time() * 0.0001f * rotation_speed);
   }
 
-  EDK3::ref_ptr<EDK3::Node> sphere = GameState.root->child(3);
-  sphere->set_position(spotLight->pos[0],spotLight->pos[1],spotLight->pos[2]);
-  sphere->set_rotation_y(ESAT::Time() * 0.05f);
+  EDK3::ref_ptr<EDK3::Node> sphere_center = GameState.root->child(3);
+  //sphere_pivot->set_position(spotLight->pos[0],spotLight->pos[1],spotLight->pos[2]);
+  sphere_center->set_position(sphere_pivot[0],sphere_pivot[1],sphere_pivot[2]);
+  sphere_center->set_rotation_y(ESAT::Time() * 0.05f);
+
+  SetLightToBolinga();
+
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
   boat->set_scale(0.01f, 0.01f, 0.01f);
@@ -502,6 +614,10 @@ void ImGuiFn(double dt) {
     ImGui::DragFloat("Faro Y: ",&faroPos.y, 0.1f, -1000.0f,1000.0f, "%f");
     ImGui::DragFloat("Faro Z: ",&faroPos.z, 0.1f, -1000.0f,1000.0f, "%f");
     
+    if(ImGui::CollapsingHeader("Bolinga")){
+      ImGui::DragFloat3("Pivot",sphere_pivot,0.1f,-100.0f,100.0f);
+      ImGui::DragFloat3("Sphere",sphere_pos,0.1f,-100.0f,100.0f);
+    }
   }
 
   if(ImGui::CollapsingHeader("Lights")){

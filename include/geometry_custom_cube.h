@@ -20,7 +20,7 @@ namespace EDK3 {
     CubeCustom();
 
     void init(const float cube_size = 1.0f,
-              const bool is_packed = false);
+              const bool is_packed = false, bool is_cube_map = false);
     virtual bool bindAttribute(const Attribute a,
                                unsigned int where_to_bind_attribute) const override;
     virtual void render() const override;
@@ -35,6 +35,7 @@ namespace EDK3 {
 
     EDK3::ref_ptr<EDK3::dev::Buffer> elements_buffer;
     EDK3::ref_ptr<EDK3::dev::Buffer> order_buffer;
+    bool is_cube_map_;
   };
 
 } //EDK3
