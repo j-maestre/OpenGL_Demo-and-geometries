@@ -22,6 +22,7 @@
 #include "Lights.h"
 #include "EDK3/dev/gpumanager.h"
 #include "geometry_custom_terrain.h"
+#include "geometry_custom_sphere.h"
 #include "material_custom.h"
 #include "joystick.h"
 
@@ -44,7 +45,7 @@ const int kTerrainHeight = 256;
 
 bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
-ESAT::Vec3 faroPos = {40.0f, -27.127f, 45.9f};
+ESAT::Vec3 faroPos = {41.8f, -27.127f, 43.2f};
 EDK3::ref_ptr<DirLight> dirLight;
 EDK3::ref_ptr<PointLight> pointLight;
 EDK3::ref_ptr<SpotLight> spotLight;
@@ -54,7 +55,8 @@ bool joystickAdded = false;
 int conected = -1;
 const float *axes;
 
-
+bool rotate_spot_light = true;
+float rotation_speed = 5.0f;
 
 
 
@@ -100,7 +102,6 @@ void ControllerSetUp(){
 }
 
 
-
 void InitScene() {
   //Allocating root node:
   EDK3::Node* root = GameState.root.alloc();
@@ -114,7 +115,6 @@ void InitScene() {
   EDK3::dev::GPUManager::Instance()->enableBlend(src, dst, op, blenBlack);
 
   joystick.alloc();
-
 
   // Create terrain
   EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
@@ -140,25 +140,37 @@ void InitScene() {
     printf("No hay FARO OBJ!!!\n");
   }
 
+  // Create sphere
+  EDK3::ref_ptr<EDK3::SphereCustom> sphere;
+  sphere.alloc();
+  sphere->init(3.0f);
 
 
   // Create material
+
+  // Terrain
   EDK3::ref_ptr<EDK3::MaterialCustom> mat;
   mat.alloc();
   mat->init("./test/terrain_vertex.shader","./test/terrain_fragment.shader");
 
+  // Watter
   EDK3::ref_ptr<EDK3::MaterialCustom> mat_water;
   mat_water.alloc();
   mat_water->init("./test/water_vertex.shader","./test/water_fragment.shader");
 
+  // Boat
   EDK3::ref_ptr<EDK3::MatDiffuse> mat_boat;
   mat_boat.alloc();
   //mat_boat->init("./test/boat/boat_vertex.shader", "./test/boat/boat_fragment.shader");
 
+  // Faro
   EDK3::ref_ptr<EDK3::MatDiffuse> mat_faro;
   mat_faro.alloc();
 
-
+  // Sphere
+  EDK3::ref_ptr<EDK3::MaterialCustom> mat_sphere;
+  mat_sphere.alloc();
+  mat_sphere->init("./test/sphere_vertex.shader","./test/sphere_fragment.shader");
 
 
   // Create texture
@@ -167,6 +179,9 @@ void InitScene() {
 
   EDK3::ref_ptr<EDK3::Texture> w_texture;
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &w_texture);
+  
+  EDK3::ref_ptr<EDK3::Texture> s_texture;
+  EDK3::Texture::Load("./test/T_EDK_Logo.png", &s_texture);
 
   EDK3::ref_ptr<EDK3::Texture> b_texture;
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
@@ -179,7 +194,7 @@ void InitScene() {
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &f_texture);
   if(!f_texture){
-    printf("No hay textura del boat!!!\n");
+    printf("No hay textura del faro!!!\n");
   }
 
   // Material custom settings
@@ -201,6 +216,15 @@ void InitScene() {
   water_mat_settings->set_color(water_color);
   water_mat_settings->setResolution(kWindowWidth,kWindowHeight);
 
+  // Sphere
+  float sphere_color[4] = {0.0f, 0.5f, 0.5f, 1.0f};
+  EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> sphere_mat_settings;
+  sphere_mat_settings.alloc();
+  sphere_mat_settings->set_diffuse_texture(s_texture);
+  sphere_mat_settings->set_specular_texture(s_texture);
+  sphere_mat_settings->set_color(sphere_color);
+
+
   // Boat
   float boat_color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_boat;
@@ -212,8 +236,6 @@ void InitScene() {
   EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_faro;
   mat_sett_faro.alloc();
   mat_sett_faro->set_color(faro_color);
-
-
 
 
   // Lights
@@ -250,13 +272,17 @@ void InitScene() {
 
   spotLight.alloc();
   spotLight->active = 1;
-  spotLight->pos[0] = faroPos.x;
+  /*spotLight->pos[0] = faroPos.x;
   spotLight->pos[1] = faroPos.y + 10.0f;
-  spotLight->pos[2] = faroPos.z;
-  spotLight->dir[0] = 1.0f;
-  spotLight->dir[1] = 0.0f;
-  spotLight->dir[2] = 0.0f;
-  spotLight->cutt_off = 1.0f;
+  spotLight->pos[2] = faroPos.z;*/
+  spotLight->pos[0] = -100.0f;
+  spotLight->pos[1] = 42.03f;
+  spotLight->pos[2] = 3.42f;
+  spotLight->dir[0] = 0.71f;
+  spotLight->dir[1] = -0.53f;
+  spotLight->dir[2] = -0.59f;
+  spotLight->cutt_off = 0.3f;
+  spotLight->outer_cut_off = 1.0f;
   spotLight->diffuse_color[0] = 1.0f;
   spotLight->diffuse_color[1] = 1.0f;
   spotLight->diffuse_color[2] = 1.0f;
@@ -265,17 +291,23 @@ void InitScene() {
   spotLight->specular_color[2] = 1.0f;
   spotLight->specular_strength = 0.003f;
   spotLight->specular_shininess = 32.0f;
-  spotLight->constant_att = 2.37f;
-  spotLight->linear_att = -0.52f;
-  spotLight->quadratic_att = 0.045f;
+  spotLight->constant_att = 1.0f;
+  spotLight->linear_att = 0.007f;
+  spotLight->quadratic_att = 0.0002f;
 
 
   mat_settings->set_dir_light(dirLight);
   water_mat_settings->set_dir_light(dirLight);
+  sphere_mat_settings->set_dir_light(dirLight);
+
   mat_settings->set_point_light(pointLight);
   water_mat_settings->set_point_light(pointLight);
+  sphere_mat_settings->set_point_light(pointLight);
+
   mat_settings->set_spot_light(spotLight);
   water_mat_settings->set_spot_light(spotLight);
+  sphere_mat_settings->set_spot_light(spotLight);
+
   //mat_sett_boat->set_dir_light(dirLight);
 
   // Drawable
@@ -321,6 +353,15 @@ void InitScene() {
     faro_node->addChild(drawable.get());
   }
   root->addChild(faro_node.get());
+
+  // Sphere
+  node.alloc();
+  node->set_geometry(sphere.get());
+  node->set_material(mat_sphere.get());
+  node->set_material_settings(sphere_mat_settings.get());
+  node->set_position(-100.0f, 10.53f, 8.23f);
+  root->addChild(node.get());
+
   
 
   // Water
@@ -354,6 +395,7 @@ void InitScene() {
   GameState.camera->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 1500.0f);
   mat_settings->set_camera_position(GameState.camera->position());
   water_mat_settings->set_camera_position(GameState.camera->position());
+  sphere_mat_settings->set_camera_position(GameState.camera->position());
   
   EDK3::dev::GPUManager::CheckGLError("Prepare END");
 }
@@ -378,6 +420,13 @@ void UpdateFn(double dt) {
     GameState.camera->set_view_target(target);
 
   }
+  if(rotate_spot_light){
+    spotLight->dir[0] = cosf(ESAT::Time() * 0.0001f * rotation_speed);
+    spotLight->dir[2] = sinf(ESAT::Time() * 0.0001f * rotation_speed);
+  }
+
+  EDK3::ref_ptr<EDK3::Node> sphere = GameState.root->child(3);
+  sphere->set_position(spotLight->pos[0],spotLight->pos[1],spotLight->pos[2]);
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
   boat->set_scale(0.01f, 0.01f, 0.01f);
@@ -492,21 +541,107 @@ void ImGuiFn(double dt) {
       ImGui::DragFloat("Position Y: ",&spotLight->pos[1], 0.01f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Position Z: ",&spotLight->pos[2], 0.01f, -100.0f,100.0f, "%f");
 
+
+      
+      ImGui::DragFloat("Direction X: ",&spotLight->dir[0], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Direction Y: ",&spotLight->dir[1], 0.01f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Direction Z: ",&spotLight->dir[2], 0.01f, -100.0f,100.0f, "%f");
+
+      ImGui::DragFloat("Cutt off ",&spotLight->cutt_off, 0.005f, -100.0f,100.0f, "%f");
+      ImGui::DragFloat("Outer Cutt off ",&spotLight->outer_cut_off, 0.005f, -100.0f,100.0f, "%f");
+      
       ImGui::DragFloat("Constant ",&spotLight->constant_att, 0.005f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Linear ",&spotLight->linear_att, 0.005f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Quadratic ",&spotLight->quadratic_att, 0.005f, -100.0f,100.0f, "%f");
       
       ImGui::DragFloat("Specular shininess",&spotLight->specular_shininess, 0.001f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Specular Strenght ",&spotLight->specular_strength, 0.001f, -100.0f,100.0f, "%f");
+      if(ImGui::Button("Rotate light")){
+        rotate_spot_light = !rotate_spot_light;
+      }
+      ImGui::DragFloat("Rotation Speed",&rotation_speed, 0.01f,0.0f,10.0f);
+      if(ImGui::CollapsingHeader("Distance default values")){
+        if(ImGui::Button("Distance 7")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.7f;
+          spotLight->quadratic_att = 1.8f;
+        }
+        if(ImGui::Button("Distance 13")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.35f;
+          spotLight->quadratic_att = 0.44f;
+        }
+        if(ImGui::Button("Distance 20")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.22f;
+          spotLight->quadratic_att = 0.20f;
+        }
+        if(ImGui::Button("Distance 32")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.14f;
+          spotLight->quadratic_att = 0.07f;
+        }
+        if(ImGui::Button("Distance 50")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.09f;
+          spotLight->quadratic_att = 0.032f;
+        }
+        if(ImGui::Button("Distance 65")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.07f;
+          spotLight->quadratic_att = 0.017f;
+        }
+        if(ImGui::Button("Distance 100")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.045f;
+          spotLight->quadratic_att = 0.0075f;
+        }
+        if(ImGui::Button("Distance 160")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.027f;
+          spotLight->quadratic_att = 0.0028f;
+        }
+        if(ImGui::Button("Distance 200")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.022f;
+          spotLight->quadratic_att = 0.0019f;
+        }
+        if(ImGui::Button("Distance 325")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.014f;
+          spotLight->quadratic_att = 0.0007f;
+        }
+        if(ImGui::Button("Distance 600")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.007f;
+          spotLight->quadratic_att = 0.0002f;
+        }
+        if(ImGui::Button("Distance 3250")){
+          spotLight->constant_att = 1.0f;
+          spotLight->linear_att = 0.0014f;
+          spotLight->quadratic_att = 0.000007f;
+        }
+      }
       if(ImGui::Button("Reset")){
-        spotLight->pos[0] = faroPos.x;
-        spotLight->pos[1] = faroPos.y +10.0f;
-        spotLight->pos[2] = faroPos.z;
+        spotLight->pos[0] = -100.0f;
+        spotLight->pos[1] = 10.53f;
+        spotLight->pos[2] = 8.23f;
+        spotLight->dir[0] = 0.71f;
+        spotLight->dir[1] = -0.53f;
+        spotLight->dir[2] = -0.59f;
+        spotLight->cutt_off = 0.3f;
+        spotLight->outer_cut_off = 1.0f;
+        spotLight->diffuse_color[0] = 1.0f;
+        spotLight->diffuse_color[1] = 1.0f;
+        spotLight->diffuse_color[2] = 1.0f;
+        spotLight->specular_color[2] = 1.0f;
+        spotLight->specular_color[2] = 1.0f;
+        spotLight->specular_color[2] = 1.0f;
         spotLight->specular_strength = 0.003f;
         spotLight->specular_shininess = 32.0f;
-        spotLight->constant_att = 2.37f;
-        spotLight->linear_att = -0.52f;
-        spotLight->quadratic_att = 0.045f;
+        spotLight->constant_att = 1.0f;
+        spotLight->linear_att = 0.007f;
+        spotLight->quadratic_att = 0.0002f;
       }
 
       
