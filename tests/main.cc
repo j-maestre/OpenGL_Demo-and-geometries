@@ -76,6 +76,8 @@ float rotation_speed = 5.0f;
 float sphere_pivot[3];
 float sphere_pos[3] = {0.0f, 0.0f, 0.0f};
 
+char controller_type;
+
 
 
 void MoveBoat(double dt){
@@ -460,7 +462,6 @@ void InitScene() {
 void SetLightToBolinga(){
     
     EDK3::ref_ptr<EDK3::Node> sphere_center = GameState.root->child(3);
-
     EDK3::ref_ptr<EDK3::Node> sphere = sphere_center->child(0);
     sphere->set_position(sphere_pos[0],sphere_pos[1],sphere_pos[2]);
 
@@ -498,11 +499,15 @@ void SetLightToBolinga(){
 
     // Sphere model matrix in world position
     oxml::Mat4 sphere_world_model = pivot_identity.Multiply(sphere_identity);
-    oxml::Vec4 sphere_worl_pos = sphere_world_model * oxml::Vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    oxml::Vec4 sphere_worl_pos = sphere_world_model.Transpose() * oxml::Vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
     spotLight->pos[0] = sphere_worl_pos[0];
     spotLight->pos[1] = sphere_worl_pos[1];
     spotLight->pos[2] = sphere_worl_pos[2];
+
+    //spotLight->dir[0] = pivot_rotation[0];
+    //spotLight->dir[1] = pivot_rotation[1];
+    //spotLight->dir[2] = pivot_rotation[2];
 
     // padre * hijo y me da la matrix model del hijo en mundo, la multiplico por vec4(0,0,0,1) y me da la posicion del hijo en mundo
 
@@ -515,7 +520,13 @@ void UpdateFn(double dt) {
 
   //ControllerSetUp();
   if(joystickAdded && joystick->isConected()){
-    joystick->getInput();
+    if(controller_type == 'P'){
+      joystick->getInputFromPS4();
+    }
+
+    if(controller_type == 'X'){
+      joystick->getInputFromXBox();
+    }
   }
 
   if(followBoat_){
@@ -528,6 +539,7 @@ void UpdateFn(double dt) {
     GameState.camera->set_view_target(target);
 
   }
+  
   if(rotate_spot_light){
     spotLight->dir[0] = cosf(ESAT::Time() * 0.0001f * rotation_speed);
     spotLight->dir[2] = sinf(ESAT::Time() * 0.0001f * rotation_speed);
@@ -773,6 +785,16 @@ void ImGuiFn(double dt) {
   if(!joystickAdded){
     if(ImGui::Button("Add PS4 Controller")){
       joystick->conect();
+      controller_type = 'P';
+      if(joystick->isConected()){
+        joystickAdded = true;
+        GameState.camera->joysticConected_ = true;
+        GameState.camera->joystick_ = joystick;
+      }
+    }
+    if(ImGui::Button("Add XBox Controller")){
+      joystick->conect();
+      controller_type = 'X';
       if(joystick->isConected()){
         joystickAdded = true;
         GameState.camera->joysticConected_ = true;
@@ -788,7 +810,7 @@ void ImGuiFn(double dt) {
       ImGui::Text("Right X Axis %f",joystick->rightAxis_[0]);
       ImGui::Text("Right Y Axis %f",joystick->rightAxis_[1]);
       ImGui::Text("Left Trigger/L2 %f",joystick->l2Trigger_);
-      ImGui::Text("Right Trigger/L2  %f",joystick->r2Trigger_);
+      ImGui::Text("Right Trigger/R2  %f",joystick->r2Trigger_);
 
       ImGui::DragFloat("Right Dead Zone",&joystick->rightDeadZone_,0.001f,-1.0f,1.0f);
       ImGui::DragFloat("Left Dead Zone",&joystick->leftDeadZone_,0.001f,-1.0f,1.0f);
