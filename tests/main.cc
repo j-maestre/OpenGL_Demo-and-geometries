@@ -181,7 +181,7 @@ void InitScene() {
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &w_texture);
   
   EDK3::ref_ptr<EDK3::Texture> s_texture;
-  EDK3::Texture::Load("./test/T_EDK_Logo.png", &s_texture);
+  EDK3::Texture::Load("./test/T_Chopper.jpg", &s_texture);
 
   EDK3::ref_ptr<EDK3::Texture> b_texture;
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
@@ -217,7 +217,7 @@ void InitScene() {
   water_mat_settings->setResolution(kWindowWidth,kWindowHeight);
 
   // Sphere
-  float sphere_color[4] = {0.0f, 0.5f, 0.5f, 1.0f};
+  float sphere_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> sphere_mat_settings;
   sphere_mat_settings.alloc();
   sphere_mat_settings->set_diffuse_texture(s_texture);
@@ -242,8 +242,8 @@ void InitScene() {
   dirLight.alloc();
   dirLight->active = 1;
   dirLight->dir[0] = 1.0f;
-  dirLight->dir[1] = -0.91f;
-  dirLight->dir[2] = 0.0001f;
+  dirLight->dir[1] = 0.12f;
+  dirLight->dir[2] = 0.5f;
   dirLight->diffuse_color[0] = 1.0f;
   dirLight->diffuse_color[1] = 1.0f;
   dirLight->diffuse_color[2] = 1.0f;
@@ -427,6 +427,7 @@ void UpdateFn(double dt) {
 
   EDK3::ref_ptr<EDK3::Node> sphere = GameState.root->child(3);
   sphere->set_position(spotLight->pos[0],spotLight->pos[1],spotLight->pos[2]);
+  sphere->set_rotation_y(ESAT::Time() * 0.05f);
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
   boat->set_scale(0.01f, 0.01f, 0.01f);
@@ -560,6 +561,9 @@ void ImGuiFn(double dt) {
         rotate_spot_light = !rotate_spot_light;
       }
       ImGui::DragFloat("Rotation Speed",&rotation_speed, 0.01f,0.0f,10.0f);
+      //float *color = spotLight->diffuse_color;
+      ImGui::ColorEdit3("Light Color",spotLight->diffuse_color);
+      ImGui::Text("R->%f G->%f B->%f A->%f",spotLight->diffuse_color[0],spotLight->diffuse_color[1],spotLight->diffuse_color[2],spotLight->diffuse_color[3]);
       if(ImGui::CollapsingHeader("Distance default values")){
         if(ImGui::Button("Distance 7")){
           spotLight->constant_att = 1.0f;
@@ -651,7 +655,7 @@ void ImGuiFn(double dt) {
 
   // Joystick
   if(!joystickAdded){
-    if(ImGui::Button("Add Controller")){
+    if(ImGui::Button("Add PS4 Controller")){
       joystick->conect();
       if(joystick->isConected()){
         joystickAdded = true;

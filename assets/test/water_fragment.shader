@@ -179,8 +179,8 @@ void main() {
   lightD.dir.x = cos(u_time * 0.001);
   lightD.dir.y = sin(u_time * 0.001);*/
 
-  //color += CalculeDirLight(u_dirLight, s_normal, view_direction);
-  //color += CaluclePointLight(u_pointLight, s_normal, view_direction, s_fragPos);
+  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  color += CaluclePointLight(u_pointLight, s_normal, view_direction, s_fragPos);
   color += CalculeSpotLight(u_spotLight, s_normal, view_direction, s_fragPos);
 
   vec3 waterColor = CalculeWater();

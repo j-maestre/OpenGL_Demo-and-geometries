@@ -169,8 +169,8 @@ void main() {
 
   vec3 color = ambient;
 
-  //color += CalculeDirLight(u_dirLight, s_normal, view_direction);
-  //color += CalculePointLightXema(u_pointLight, s_normal, view_direction, s_fragPos);
+  color += CalculeDirLight(u_dirLight, s_normal, view_direction);
+  color += CalculePointLightXema(u_pointLight, s_normal, view_direction, s_fragPos);
   color += CalculeSpotLight(u_spotLight, s_normal, view_direction, s_fragPos);
   //fragColor = vec4(color, 1.0);
   //fragColor = vec4(s_uv, 0.0, 1.0);
