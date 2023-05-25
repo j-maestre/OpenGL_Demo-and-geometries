@@ -1,4 +1,6 @@
 #include "geometry_custom_cube.h"
+
+#include "EDK3/dev/glew.h"
 #include "ESAT/math.h"
 #include "EDK3/dev/gpumanager.h"
 
@@ -16,10 +18,10 @@ namespace EDK3
     return *this;
   }
   
-void CubeCustom::init(const float cube_size, const bool is_packed)
+void CubeCustom::init(const float cube_size, const bool is_packed, bool is_cube_map)
 {
   const float size = cube_size * 0.5f;
-
+  is_cube_map_ = is_cube_map;
   float kBasicCubeSNVertex[] = {
     -size, size, -size,           // v top left front
     -0.577f, 0.577f,  -0.577f,    // vn
@@ -238,7 +240,18 @@ bool CubeCustom::bindAttribute(const Attribute a, unsigned where_to_bind_attribu
 
   void CubeCustom::render() const
   {
-    dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, 36, order_buffer.get(), T_UINT);
+    dev::GPUManager *gpu = dev::GPUManager::Instance();
+    if (is_cube_map_)
+    {
+      glCullFace(GL_FRONT);
+    }
+    gpu->drawElements(dev::GPUManager::kDrawMode_Triangles, 36, order_buffer.get(), T_UINT);
+    if (is_cube_map_)
+    {
+      gpu->changeDepthMask();
+      gpu->enableDepthTest(dev::GPUManager::kCompareFunc_Less);
+      glCullFace(GL_BACK);
+    }
   }
 
 

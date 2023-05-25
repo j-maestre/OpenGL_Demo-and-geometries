@@ -15,7 +15,8 @@ class Joystick: public EDK3::Referenced{
         ~Joystick();
 
         void conect();
-        void getInput();
+        void getInputFromPS4();
+        void getInputFromXBox();
 
         bool isConected();
 

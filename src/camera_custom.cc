@@ -56,7 +56,7 @@ void CameraCustom::update(const double delta_time, const float window_width, con
       accum_joystick_offset_.x += joystick_->rightAxis_[0];
       accum_joystick_offset_.y += joystick_->rightAxis_[1];
 
-      omega = accum_joystick_offset_.x / window_width * oxml::Mathf::PI * 2.0f * joystickSensitivity_;
+      omega = accum_joystick_offset_.x / window_width * (oxml::Mathf::PI * 2.0f) * joystickSensitivity_;
       alpha = accum_joystick_offset_.y / window_height * (oxml::Mathf::PI - oxml::Mathf::PI * 0.5f) * joystickSensitivity_;
     }
     
