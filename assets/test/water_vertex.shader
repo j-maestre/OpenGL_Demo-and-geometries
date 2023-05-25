@@ -37,15 +37,18 @@ void main()
 {
 
   vec4 uv = vec4(0.0);
-  //mat4 translate = InitAsTranslate(0.00001, sin(u_time * 0.001) * 3.0, 0.0001);
-  //mat4 translate = InitAsTranslate(0.00001, 0.0001, 0.0001);
   mat4 model = u_model_matrix;
 
   vec4 pos = model * vec4(a_position, 1.0);
-  gl_Position = (u_projection_matrix * u_view_matrix) * (vec4(pos.x, 
+  /*gl_Position = (u_projection_matrix * u_view_matrix) * (vec4(pos.x, 
                                                               pos.y + (sin(pos.x + (u_time * 0.001)) * 0.5),
                                                               pos.z + (cos(pos.x + u_time * 0.0005) * 6.0),
-                                                              pos.w)); 
+                                                              pos.w)); */
+  
+  gl_Position = (u_projection_matrix * u_view_matrix) * (vec4(pos.x, 
+                                                              pos.y + (sin(pos.x + (u_time * 0.001)) * 0.5),
+                                                              pos.z,
+                                                              pos.w));
 
   //gl_Position = (u_projection_matrix * u_view_matrix * model) * vec4(a_position, 1.0);
 

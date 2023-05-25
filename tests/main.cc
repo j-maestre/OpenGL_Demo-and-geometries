@@ -55,8 +55,8 @@ std::vector<std::string> cube_map_tex = {
 const int kWindowWidth = 1024;
 const int kWindowHeight = 768;
 
-const int kTerrainWidth = 256;
-const int kTerrainHeight = 256;
+const int kTerrainWidth = 1024;
+const int kTerrainHeight = 1024;
 
 bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
@@ -212,7 +212,10 @@ void InitScene() {
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &t_texture);
 
   EDK3::ref_ptr<EDK3::Texture> w_texture;
-  EDK3::Texture::Load("./test/T_EDK_Logo.png", &w_texture);
+  EDK3::Texture::Load("./test/watter_diff.png", &w_texture);
+  w_texture->set_wrap_r(EDK3::Texture::Wrap::W_REPEAT);
+  w_texture->set_wrap_s(EDK3::Texture::Wrap::W_REPEAT);
+  w_texture->set_wrap_t(EDK3::Texture::Wrap::W_REPEAT);
   
   EDK3::ref_ptr<EDK3::Texture> s_texture;
   EDK3::Texture::Load("./test/T_Chopper.jpg", &s_texture);
@@ -381,13 +384,15 @@ void InitScene() {
   // Faro
   EDK3::ref_ptr<EDK3::Node> faro_node;
   
+  // Piedra en index 6
   faro_node.alloc();
+  faro_node->set_position(faroPos.x, faroPos.y, faroPos.z);
   for(int i = 0; i < faro.size(); i++){
     drawable.alloc();
     drawable->set_geometry(faro[i].get());
     drawable->set_material(mat_faro.get());
     drawable->set_material_settings(mat_sett_faro.get());
-    drawable->set_position(faroPos.x, faroPos.y, faroPos.z);
+    drawable->set_position(0.0f, 0.0f, 0.0f);
     faro_node->addChild(drawable.get());
   }
   root->addChild(faro_node.get());
@@ -508,12 +513,15 @@ void SetLightToBolinga(){
     spotLight->pos[2] = sphere_worl_pos[2];
 
     //spotLight->dir[0] = pivot_rotation[0];
-    spotLight->dir[1] = sinf(pivot_rotation[1]);
+    //spotLight->dir[1] = sinf(pivot_rotation[1]);
     //spotLight->dir[2] = pivot_rotation[2];
 
     // padre * hijo y me da la matrix model del hijo en mundo, la multiplico por vec4(0,0,0,1) y me da la posicion del hijo en mundo
 
 }
+
+float piedra_pos[3] = {faroPos.x,faroPos.y,faroPos.z};
+float piedra_rotation = 5.0f;
 
 void UpdateFn(double dt) {
   GameState.camera->set_clear_color(1.0f, 1.0f, 0.75f, 1.0f);
@@ -565,6 +573,10 @@ void UpdateFn(double dt) {
 
   EDK3::ref_ptr<EDK3::Node> faro = GameState.root->child(2);
   faro->set_position(faroPos.x, faroPos.y, faroPos.z);
+  
+  EDK3::ref_ptr<EDK3::Node> piedra1 = faro->child(6);
+  //piedra1->set_position(piedra_pos[0], piedra_pos[1], piedra_pos[2]);
+  //faro->set_rotation_y(ESAT::Time() * 0.001f * piedra_rotation);
 
   //boat->set_rotation_xyz(ESAT::Time() * 0.005f, ESAT::Time() * 0.005f, ESAT::Time() * 0.005f);
   //boat->set_scale(0.2f, 0.2f, 0.2f);
@@ -783,7 +795,11 @@ void ImGuiFn(double dt) {
       
     }
 
+
   }
+  
+  ImGui::DragFloat3("Piedra", piedra_pos,0.01f, -100.0f, 100.0f);
+  ImGui::DragFloat("Piedra Rotation", &piedra_rotation,0.01f, -100.0f, 100.0f);
 
   // Joystick
   if(!joystickAdded){
