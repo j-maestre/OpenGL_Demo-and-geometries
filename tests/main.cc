@@ -128,7 +128,8 @@ void InitScene() {
 
   // Create boat
   EDK3::scoped_array<EDK3::ref_ptr<EDK3::Geometry>> boat;
-  EDK3::LoadObj("./test/boat/boat.obj", &boat, nullptr);
+  //EDK3::LoadObj("./test/boat/boat.obj", &boat, nullptr);
+  EDK3::LoadObj("./test/boat/boatJosefa.obj", &boat, nullptr);
   if(!boat.get()){
     printf("No hay BOAT OBJ!!!\n");
   }
@@ -159,7 +160,7 @@ void InitScene() {
   mat_water->init("./test/water_vertex.shader","./test/water_fragment.shader");
 
   // Boat
-  EDK3::ref_ptr<EDK3::MatDiffuse> mat_boat;
+  EDK3::ref_ptr<EDK3::MatDiffuseTexture> mat_boat;
   mat_boat.alloc();
   //mat_boat->init("./test/boat/boat_vertex.shader", "./test/boat/boat_fragment.shader");
 
@@ -185,7 +186,7 @@ void InitScene() {
 
   EDK3::ref_ptr<EDK3::Texture> b_texture;
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
-  EDK3::Texture::Load("./test/T_EDK_Logo.png", &b_texture);
+  EDK3::Texture::Load("./test/boat/barcoJosefaDiffuse.png", &b_texture);
   if(!b_texture){
     printf("No hay textura del boat!!!\n");
   }
@@ -227,9 +228,10 @@ void InitScene() {
 
   // Boat
   float boat_color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-  EDK3::ref_ptr<EDK3::MatDiffuse::Settings> mat_sett_boat;
+  EDK3::ref_ptr<EDK3::MatDiffuseTexture::Settings> mat_sett_boat;
   mat_sett_boat.alloc();
-  mat_sett_boat->set_color(boat_color);
+  mat_sett_boat->set_texture(b_texture.get());
+  //mat_sett_boat->set_color(boat_color);
   
   // Faro
   float faro_color[4] = {0.0f, 0.5f, 0.5f, 1.0f};
@@ -430,9 +432,11 @@ void UpdateFn(double dt) {
   sphere->set_rotation_y(ESAT::Time() * 0.05f);
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
-  boat->set_scale(0.01f, 0.01f, 0.01f);
-  boat->set_rotation_z(90.0f);
-  boat->set_rotation_x(-90.0f);
+  //boat->set_scale(0.01f, 0.01f, 0.01f);
+  boat->set_scale(1.0f, 1.0f, 1.0f);
+  //boat->set_rotation_z(90.0f);
+  //boat->set_rotation_z(0.0f);
+  //boat->set_rotation_x(-90.0f);
   boat->set_position(boatPos.x, boatPos.y, boatPos.z);
 
   EDK3::ref_ptr<EDK3::Node> faro = GameState.root->child(2);
