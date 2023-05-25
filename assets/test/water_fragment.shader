@@ -278,7 +278,7 @@ vec3 getatm(vec3 ray){
 }
 
 float sun(vec3 ray){
- 	vec3 sd = normalize(vec3(1.0));   
+ 	vec3 sd = normalize(u_dirLight.dir);   
   return pow(max(0.0, dot(ray, sd)), 528.0) * 110.0;
 }
 vec3 aces_tonemap(vec3 color){	
