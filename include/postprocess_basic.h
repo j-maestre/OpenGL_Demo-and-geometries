@@ -22,9 +22,19 @@
 namespace EDK3 {
    
 class PostprocessBasic : public EDK3::Material {
+
  public:
+  enum PostProcessType{
+    Default,
+    Color,
+    GrayScale,
+    Sepia,
+    NightVision,
+    InvertedColors,
+    EdgeDetection,
+  };
   PostprocessBasic();
-  void init();
+  void init(PostProcessType = Default);
 
   virtual bool enable(const EDK3::MaterialSettings *mat) const override;
   virtual void setupCamera(const float projection[16], const float view[16]) const override;
@@ -34,12 +44,14 @@ class PostprocessBasic : public EDK3::Material {
   virtual EDK3::Attribute attribute_at_index(const unsigned int attrib_idx) const;
   virtual EDK3::Type attribute_type_at_index(const unsigned int attrib_index) const;
 
-
   class PostprocessBasicSettings : public EDK3::MaterialSettings {
    public:
+
     PostprocessBasicSettings() {
       memset(color_, 0, sizeof(color_));
     }
+
+    
     void set_color(const float v[4]) {
       memcpy(color_, v, sizeof(color_));
     }
@@ -77,6 +89,7 @@ class PostprocessBasic : public EDK3::Material {
 
  protected:
   virtual ~PostprocessBasic();
+
 
  private:
   EDK3::ref_ptr<EDK3::dev::Program> program_;

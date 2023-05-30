@@ -25,6 +25,8 @@
 #include "geometry_custom_sphere.h"
 #include "material_custom.h"
 #include "joystick.h"
+#include "EDK3/rendertarget.h"
+#include "postprocess_basic.h"
 #include "oxml/Mat4.h"
 #include "oxml/Vec3.h"
 #include "oxml/Vec4.h"
@@ -41,6 +43,9 @@
 struct {
   EDK3::ref_ptr<EDK3::CameraCustom> camera;
   EDK3::ref_ptr<EDK3::Node> root;
+  EDK3::ref_ptr<EDK3::RenderTarget> render_target;
+  EDK3::ref_ptr<EDK3::PostprocessBasic> mat_postprocess;
+  EDK3::ref_ptr<EDK3::PostprocessBasic::PostprocessBasicSettings> mat_postprocess_settings;
 } GameState;
 
 std::vector<std::string> cube_map_tex = {
@@ -209,7 +214,9 @@ void InitScene() {
 
   // Create texture
   EDK3::ref_ptr<EDK3::Texture> t_texture;
-  EDK3::Texture::Load("./test/T_EDK_Logo.png", &t_texture);
+  EDK3::Texture::Load("./test/channel0.png", &t_texture);
+  EDK3::ref_ptr<EDK3::Texture> t_s_texture;
+  EDK3::Texture::Load("./test/channel1.png", &t_s_texture);
 
   EDK3::ref_ptr<EDK3::Texture> w_texture;
   EDK3::Texture::Load("./test/watter_diff.png", &w_texture);
@@ -241,7 +248,7 @@ void InitScene() {
   EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> mat_settings;
   mat_settings.alloc();
   mat_settings->set_diffuse_texture(t_texture);
-  mat_settings->set_specular_texture(t_texture);
+  mat_settings->set_specular_texture(t_s_texture);
   mat_settings->set_color(terrain_color);
 
   // Water
@@ -418,16 +425,15 @@ void InitScene() {
     
   root->addChild(sphere_node.get());
 
-
-    EDK3::ref_ptr<EDK3::Drawable> cube;
-    cube.alloc();
-    cube->set_geometry(cube_geo.get());
-    cube->set_position(1.0f, 0.0f, -3.0);
-    cube->set_scale(1.0f, 1.0f, 1.0f);
-    cube->set_material(mat_custom.get());
-    cube->set_material_settings(mat_custom_settings.get());
-    cube->set_HPR(0.0f, 0.0f, 0.0f);
-    root->addChild(cube.get());
+  EDK3::ref_ptr<EDK3::Drawable> cube;
+  cube.alloc();
+  cube->set_geometry(cube_geo.get());
+  cube->set_position(1.0f, 0.0f, -3.0);
+  cube->set_scale(1.0f, 1.0f, 1.0f);
+  cube->set_material(mat_custom.get());
+  cube->set_material_settings(mat_custom_settings.get());
+  cube->set_HPR(0.0f, 0.0f, 0.0f);
+  root->addChild(cube.get());
 
 
   // Water
@@ -437,6 +443,18 @@ void InitScene() {
   node->set_material_settings(water_mat_settings.get());
   node->set_position(-1.0f,0.0f,-1.0f);
   root->addChild(node.get()); 
+
+
+  // Post Process
+  GameState.render_target.alloc();
+  GameState.render_target->init(kWindowWidth, kWindowHeight);
+  
+  float color[] = {1.0f, 0.0f, 0.0f, 1.0f};
+  GameState.mat_postprocess.alloc();
+  GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::Default);
+  GameState.mat_postprocess_settings.alloc();
+  GameState.mat_postprocess_settings->set_color(color);
+  GameState.mat_postprocess_settings->set_texture(GameState.render_target->color_texture());
 
 
   //root->addChild(root_2.get());
@@ -588,7 +606,10 @@ void RenderFn() {
 
   //Rendering the scene:
   EDK3::dev::GPUManager::CheckGLError("begin Render-->");
+  GameState.render_target->begin();
   GameState.camera->doRender();
+  GameState.render_target->end();
+  GameState.mat_postprocess->drawFullScreenQuad(GameState.mat_postprocess_settings.get());
   EDK3::dev::GPUManager::CheckGLError("end Render-->");
 }
 
@@ -770,6 +791,7 @@ void ImGuiFn(double dt) {
           spotLight->quadratic_att = 0.000007f;
         }
       }
+      
       if(ImGui::Button("Reset")){
         spotLight->pos[0] = -100.0f;
         spotLight->pos[1] = 10.53f;
@@ -794,6 +816,8 @@ void ImGuiFn(double dt) {
 
       
     }
+
+    
 
 
   }
@@ -838,6 +862,30 @@ void ImGuiFn(double dt) {
       ImGui::DragFloat("Movement Speed", &GameState.camera->joystickMovementSpeed_,0.005f,0.005f,1.0f);
       ImGui::DragFloat("Sensitivity", &GameState.camera->joystickSensitivity_,0.01f,0.1f,20.0f);
       ImGui::DragFloat("Turbo", &GameState.camera->turboSpeed_,0.01f,0.01f,1.0f);
+    }
+  }
+
+  if(ImGui::CollapsingHeader("Post Process")){
+    if(ImGui::Button("Default")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::Default);
+    }
+    if(ImGui::Button("Color")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::Color);
+    }
+    if(ImGui::Button("GrayScale")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::GrayScale);
+    }
+    if(ImGui::Button("Sepia")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::Sepia);
+    }
+    if(ImGui::Button("NightVision")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::NightVision);
+    }
+    if(ImGui::Button("InvertedColors")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::InvertedColors);
+    }
+    if(ImGui::Button("EdgeDetection")){
+      GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::EdgeDetection);
     }
   }
 

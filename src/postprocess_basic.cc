@@ -35,6 +35,21 @@ static const char kVertexShader[] = GLSL(
     }\n
   );
 
+  static const char kFragmentShaderNormal[] = GLSL(
+  layout(location = 0) out vec4 fragColor;\n
+  uniform float u_time;\n
+  uniform sampler2D u_texture;\n
+  uniform vec4 u_color;\n
+  in vec2 s_uv;\n
+  in vec3 s_normal;\n
+  \n
+  void main(){\n
+    \n
+    fragColor = texture(u_texture, s_uv);\n
+  }\n
+
+);
+
 static const char kFragmentShader[] = GLSL(
   layout(location = 0) out vec4 fragColor;\n
   uniform float u_time;\n
@@ -188,7 +203,7 @@ PostprocessBasic& PostprocessBasic::operator=(const PostprocessBasic& other) {
   return *this;
 }
 
-void PostprocessBasic::init() {
+void PostprocessBasic::init(PostProcessType type) {
   //TODO
 
   EDK3::scoped_array<char> error;
@@ -203,13 +218,25 @@ void PostprocessBasic::init() {
   dev::GPUManager::Instance()->newShader(&fragment_shader);
 
   vertex_shader->loadSource(dev::Shader::kType_Vertex ,kVertexShader, sizeof(kVertexShader));
-  fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_edge_detection, sizeof(kFragmentShader_edge_detection));
+  
+  switch (type){
+    case Default: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShaderNormal, sizeof(kFragmentShaderNormal)); break;
+    case Color: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader, sizeof(kFragmentShader)); break;
+    case GrayScale: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_gray_scale, sizeof(kFragmentShader_gray_scale)); break;
+    case Sepia: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_sepia, sizeof(kFragmentShader_sepia)); break;
+    case NightVision: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_night_vision, sizeof(kFragmentShader_night_vision)); break;
+    case InvertedColors: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_inverted_colors, sizeof(kFragmentShader_inverted_colors)); break;
+    case EdgeDetection: fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShader_edge_detection, sizeof(kFragmentShader_edge_detection)); break;
+    default:fragment_shader->loadSource(dev::Shader::kType_Fragment, kFragmentShaderNormal, sizeof(kFragmentShaderNormal)); break;
+  }
+  
+
   bool done = false;
   
   /*
   printf("%s\n",kVertexShader);
   */
-  printf("%s\n",kFragmentShader_edge_detection);
+  printf("%s\n",kFragmentShader);
   done = vertex_shader->compile(&error);
   if(!done)printf("Vertex:\n%s\n", error.get());
   
