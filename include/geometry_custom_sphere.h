@@ -19,7 +19,7 @@ class SphereCustom : public EDK3::Geometry {
  public:
   SphereCustom();
 
-  void init(const float sphere_size = 1.0f, const int num_heights = 20,
+  void init(bool *wireframe, const float sphere_size = 1.0f, const int num_heights = 20,
             const int num_revs = 20);
   virtual bool bindAttribute(const Attribute a,
                              unsigned int where_to_bind_attribute) const override;
@@ -38,6 +38,7 @@ class SphereCustom : public EDK3::Geometry {
   bool is_initialized_;
   int num_heights_;
   int num_revs_;
+  bool *wireFrameMode_;
 };
 
 } //EDK3

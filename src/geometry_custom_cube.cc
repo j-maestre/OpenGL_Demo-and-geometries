@@ -18,8 +18,8 @@ namespace EDK3
     return *this;
   }
   
-void CubeCustom::init(const float cube_size, const bool is_packed, bool is_cube_map)
-{
+void CubeCustom::init(bool *wireframe, const float cube_size, const bool is_packed, bool is_cube_map){
+  wireFrameMode_ = wireframe;
   const float size = cube_size * 0.5f;
   is_cube_map_ = is_cube_map;
   float kBasicCubeSNVertex[] = {
@@ -245,7 +245,11 @@ bool CubeCustom::bindAttribute(const Attribute a, unsigned where_to_bind_attribu
     {
       glCullFace(GL_FRONT);
     }
-    gpu->drawElements(dev::GPUManager::kDrawMode_Triangles, 36, order_buffer.get(), T_UINT);
+    if(*wireFrameMode_){
+      gpu->drawElements(dev::GPUManager::kDrawMode_Lines, 36, order_buffer.get(), T_UINT);
+    }else{
+      gpu->drawElements(dev::GPUManager::kDrawMode_Triangles, 36, order_buffer.get(), T_UINT);
+    }
     if (is_cube_map_)
     {
       gpu->changeDepthMask();

@@ -24,10 +24,11 @@ namespace EDK3
     alpha = pi / KNHeights
   */
 
-  void SphereCustom::init(const float sphere_size, const int num_heights, const int num_revs)
+  void SphereCustom::init(bool *wireframe, const float sphere_size, const int num_heights, const int num_revs)
   {
+    
     is_initialized_ = true;
-
+    wireFrameMode_ = wireframe;
     
 
     num_heights_ = num_heights;
@@ -136,7 +137,11 @@ namespace EDK3
   }
 
   void SphereCustom::render() const{
-    dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, ((num_heights_) * (num_revs_) * 6),order_buffer_.get(),T_UINT);
+    if(*wireFrameMode_){
+      dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Lines, ((num_heights_) * (num_revs_) * 6),order_buffer_.get(),T_UINT);
+    }else{
+      dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, ((num_heights_) * (num_revs_) * 6),order_buffer_.get(),T_UINT);
+    }
   }
 
 

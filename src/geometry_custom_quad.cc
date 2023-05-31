@@ -28,7 +28,7 @@ QuadCustom& QuadCustom::operator=(const QuadCustom&)
 QuadCustom::~QuadCustom() {}
 
   
-void QuadCustom::init(const float quad_size) {
+void QuadCustom::init(bool *wireframe, const float quad_size) {
   //TODO demand graphic resources to the GPUManager.
 
   /**
@@ -46,6 +46,7 @@ void QuadCustom::init(const float quad_size) {
          ------------
     That's the order of its face.
    */
+  wireFrameMode_ = wireframe;
   dev::GPUManager *instance = dev::GPUManager::Instance();
   
   instance->newBuffer(&elements_buffer);
@@ -115,7 +116,11 @@ bool QuadCustom::bindAttribute(const Attribute a,
 
 void QuadCustom::render() const {
   //TODO
-  EDK3::dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, 6, order_buffer.get(), T_UINT);
+  if(*wireFrameMode_){
+    EDK3::dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Lines, 6, order_buffer.get(), T_UINT);
+  }else{ 
+    EDK3::dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, 6, order_buffer.get(), T_UINT);
+  }
 }
 
   

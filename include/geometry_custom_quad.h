@@ -19,7 +19,7 @@ class QuadCustom : public EDK3::Geometry {
  public:
   QuadCustom();
 
-  void init(const float quad_size = 1.0f);
+  void init(bool *wireframe, const float quad_size = 1.0f);
   virtual bool bindAttribute(const Attribute a,
                              unsigned int where_to_bind_attribute) const override;
   virtual void render() const override;
@@ -35,6 +35,7 @@ class QuadCustom : public EDK3::Geometry {
   EDK3::ref_ptr<EDK3::dev::Buffer> elements_buffer;
   EDK3::ref_ptr<EDK3::dev::Buffer> order_buffer;
   bool is_initialized_;
+  bool *wireFrameMode_;
 };
 
 } //EDK3

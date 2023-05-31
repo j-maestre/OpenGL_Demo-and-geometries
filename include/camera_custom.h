@@ -38,9 +38,10 @@ class CameraCustom : public EDK3::Camera {
   float sensitivity() const;
   ESAT::Vec3 direction() const;
 
-  //TODO something in the future:
-  //virtual void doCull(const Node* root_node) override;
-  //virtual void doRender() const override;
+  virtual void doCull(const Node* root_node) override;
+  virtual void doRender() const override;
+
+  void set_wireframe(bool wireframe);
 
   bool following_;
   bool joysticConected_;
@@ -51,6 +52,7 @@ class CameraCustom : public EDK3::Camera {
   ESAT::Vec2 accum_joystick_offset_;
   ESAT::Vec2 last_joystick_offset_;
 
+  struct CamData;
  protected:
   virtual ~CameraCustom();
 
@@ -63,7 +65,8 @@ class CameraCustom : public EDK3::Camera {
   ESAT::Vec3 view_dir_;
   ESAT::Vec2 last_mouse_pos_;
   ESAT::Vec3 followingPosition_;
-
+  EDK3::scoped_ptr<CamData> data_;
+  bool wireframe_;
   
 
  private:

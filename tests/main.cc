@@ -33,6 +33,7 @@
 #include "cubemap_material.h"
 #include "custom_gpu_cubemap.h"
 #include "geometry_custom_cube.h"
+#include "dev/custom_gpu_manager.h"
 
 #include "ESAT_extra/imgui.h"
 #include "EDK3/dev/opengl.h"
@@ -47,6 +48,8 @@ struct {
   EDK3::ref_ptr<EDK3::PostprocessBasic> mat_postprocess;
   EDK3::ref_ptr<EDK3::PostprocessBasic::PostprocessBasicSettings> mat_postprocess_settings;
 } GameState;
+
+EDK3::dev::CustomGPUManager gpu;
 
 std::vector<std::string> cube_map_tex = {
   "./test/skybox/right.jpg",
@@ -65,7 +68,7 @@ const int kTerrainHeight = 1024;
 
 bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, 0.0f};
-ESAT::Vec3 faroPos = {41.8f, -27.127f, 43.2f};
+ESAT::Vec3 faroPos = {121.0f, -51.0f, 100.0f};
 EDK3::ref_ptr<DirLight> dirLight;
 EDK3::ref_ptr<PointLight> pointLight;
 EDK3::ref_ptr<SpotLight> spotLight;
@@ -80,8 +83,13 @@ float rotation_speed = 5.0f;
 
 float sphere_pivot[3];
 float sphere_pos[3] = {0.0f, 0.0f, 0.0f};
+float sphere_rotation_speed = 0.2f;
+
 
 char controller_type;
+
+bool wireFrame_ = false;
+bool wireFrame2_ = false;
 
 
 
@@ -143,12 +151,12 @@ void InitScene() {
   // Create terrain
   EDK3::ref_ptr<EDK3::TerrainCustom> terrain;
   terrain.alloc();
-  terrain->init(kTerrainWidth, kTerrainHeight, 1.2f);
+  terrain->init(&wireFrame_, kTerrainWidth, kTerrainHeight, 1.2f);
 
   // Create water
   EDK3::ref_ptr<EDK3::TerrainCustom> water;
   water.alloc();
-  water->init(kTerrainWidth,kTerrainHeight, 0.2f);
+  water->init(&wireFrame_, kTerrainWidth,kTerrainHeight, 0.2f);
 
   // Create boat
   EDK3::scoped_array<EDK3::ref_ptr<EDK3::Geometry>> boat;
@@ -168,7 +176,7 @@ void InitScene() {
   // Create sphere
   EDK3::ref_ptr<EDK3::SphereCustom> sphere;
   sphere.alloc();
-  sphere->init(3.0f);
+  sphere->init(&wireFrame_, 3.0f);
 
   // Create cube map
   EDK3::ref_ptr<CustomGPUCubeMap> cube_map;
@@ -177,7 +185,7 @@ void InitScene() {
 
   EDK3::ref_ptr<EDK3::CubeCustom> cube_geo;
   cube_geo.alloc();
-  cube_geo->init(1.0f, false, true);
+  cube_geo->init(&wireFrame_,1.0f, false, true);
 
 
   // Create material
@@ -415,9 +423,9 @@ void InitScene() {
   sphere_drawable->set_position(sphere_pos[0], sphere_pos[1], sphere_pos[2]);
 
   // Sphere pivot
-  sphere_pivot[0] = -100.0f;
-  sphere_pivot[1] = 40.73f;
-  sphere_pivot[2] = 3.13f;
+  sphere_pivot[0] = -63.0f;
+  sphere_pivot[1] = 43.230f;
+  sphere_pivot[2] = 15.53f;
 
   sphere_node.alloc();
   sphere_node->set_position(sphere_pivot[0], sphere_pivot[1], sphere_pivot[2]);
@@ -449,7 +457,7 @@ void InitScene() {
   GameState.render_target.alloc();
   GameState.render_target->init(kWindowWidth, kWindowHeight);
   
-  float color[] = {1.0f, 0.0f, 0.0f, 1.0f};
+  float color[] = {0.0f, 1.0f, 0.0f, 1.0f};
   GameState.mat_postprocess.alloc();
   GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::Default);
   GameState.mat_postprocess_settings.alloc();
@@ -480,7 +488,6 @@ void InitScene() {
   mat_settings->set_camera_position(GameState.camera->position());
   water_mat_settings->set_camera_position(GameState.camera->position());
   sphere_mat_settings->set_camera_position(GameState.camera->position());
-  
   EDK3::dev::GPUManager::CheckGLError("Prepare END");
 }
 
@@ -576,7 +583,7 @@ void UpdateFn(double dt) {
   EDK3::ref_ptr<EDK3::Node> sphere_center = GameState.root->child(3);
   //sphere_pivot->set_position(spotLight->pos[0],spotLight->pos[1],spotLight->pos[2]);
   sphere_center->set_position(sphere_pivot[0],sphere_pivot[1],sphere_pivot[2]);
-  sphere_center->set_rotation_y(ESAT::Time() * 0.05f);
+  sphere_center->set_rotation_y(ESAT::Time() * 0.005f * sphere_rotation_speed);
 
   SetLightToBolinga();
 
@@ -593,6 +600,10 @@ void UpdateFn(double dt) {
   faro->set_position(faroPos.x, faroPos.y, faroPos.z);
   
   EDK3::ref_ptr<EDK3::Node> piedra1 = faro->child(6);
+
+  for(int i = 0; i < GameState.root->num_children(); i++){
+    EDK3::ref_ptr<EDK3::Node> child = GameState.root->child(i);
+  }
   //piedra1->set_position(piedra_pos[0], piedra_pos[1], piedra_pos[2]);
   //faro->set_rotation_y(ESAT::Time() * 0.001f * piedra_rotation);
 
@@ -602,6 +613,7 @@ void UpdateFn(double dt) {
 
 void RenderFn() {
   //For every frame... determine what's visible:
+  GameState.camera->set_wireframe(wireFrame2_);
   GameState.camera->doCull(GameState.root.get());
 
   //Rendering the scene:
@@ -666,6 +678,7 @@ void ImGuiFn(double dt) {
     if(ImGui::CollapsingHeader("Bolinga")){
       ImGui::DragFloat3("Pivot",sphere_pivot,0.1f,-100.0f,100.0f);
       ImGui::DragFloat3("Sphere",sphere_pos,0.1f,-100.0f,100.0f);
+      ImGui::DragFloat("Rotation Speed",&sphere_rotation_speed,0.01f, -50.0f, 50.0f);
     }
   }
 
@@ -814,6 +827,8 @@ void ImGuiFn(double dt) {
         spotLight->quadratic_att = 0.0002f;
       }
 
+
+
       
     }
 
@@ -889,12 +904,14 @@ void ImGuiFn(double dt) {
     }
   }
 
+  ImGui::Checkbox("WireFrame",&wireFrame2_);
 
   ImGui::End();
   ImGui::Render();
 }
 
 int ESAT::main(int argc, char** argv) {
+  EDK3::dev::GPUManager::Instance()->ReplaceGPUManagerImplementation(&gpu);
   ESAT::WindowInit(kWindowWidth, kWindowHeight);
   InitScene();
   double dt = 0.0;

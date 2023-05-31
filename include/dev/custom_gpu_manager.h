@@ -47,32 +47,32 @@ class CustomGPUManager : public EDK3::dev::GPUManager {
                                 kFrameBufferColor | kFrameBufferDepth) override;
    */
 
-   /*
+  
   virtual void enableDepthTest(const CompareFunc f) override;
   virtual void disableDepthTest() override;
-   */
+   
 
-   /*
+   
   virtual void enableBlend(BlendParam source, 
                            BlendParam destination, 
                            BlendOp operation, 
                            const float ConstantColor[4]) override;
-  void disableBlend();*/
+  void disableBlend();
    
 
    
-  //virtual void enableCullFaces(const FaceType f) override;
-  //virtual void disableCullFaces() override;
+  virtual void enableCullFaces(const FaceType f) override;
+  virtual void disableCullFaces() override;
    
 
-   /*
+   
   virtual void enableScissor(int x, int y,
                              unsigned int width,
                              unsigned int height) override;
   virtual void disableScissor() override;
-   */
+   
 
-   /*
+   
   virtual void enableVertexAttribute(const EDK3::dev::Buffer *buffer,
                                      const unsigned int attribute_index,
                                      const EDK3::Type type,
@@ -83,16 +83,19 @@ class CustomGPUManager : public EDK3::dev::GPUManager {
 
    
   virtual void disableVertexAttribute(const unsigned int attrib_index) override;
-   */
+   
 
    
-  /*virtual void drawElements(const DrawMode mode,
+  virtual void drawElements(const DrawMode mode,
                             unsigned int count,
                             const EDK3::dev::Buffer *buffer,
                             const EDK3::Type element_type = EDK3::Type::T_USHORT,
-                            const unsigned int offset = 0) const override;*/
+                            const unsigned int offset = 0) const override;
    
 
+  void set_wireframe(bool wireframe);
+private:
+  bool wireframe_;
 }; //CustomGPUManager
 
 } //dev

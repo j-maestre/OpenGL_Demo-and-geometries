@@ -22,7 +22,7 @@ class TerrainCustom : public EDK3::Geometry {
  public:
   TerrainCustom();
 
-  void init(const int num_cols = 4, const int num_rows = 4, 
+  void init(bool *wireframe, const int num_cols = 4, const int num_rows = 4, 
             const float height_mult = 1.0f, const float size = 1.0f,
             const bool is_centered = true);
   virtual bool bindAttribute(const Attribute a, 
@@ -42,6 +42,7 @@ class TerrainCustom : public EDK3::Geometry {
   bool is_initialized_;
   int num_rows_;
   int num_cols_;
+  bool *wireFrameMode_;
 };
 
 } //EDK3

@@ -42,9 +42,6 @@ namespace EDK3
       output->allocT<CustomGPUTexture>()->init(Texture::T_3D, internal_format, width, height, depth);
     }
 
-
-    
-/*
     void CustomGPUManager::enableBlend(BlendParam source, BlendParam destination, BlendOp operation, const float ConstantColor[4])
     {
       GPUManager::enableBlend(source, destination, operation, ConstantColor);
@@ -184,8 +181,8 @@ namespace EDK3
     void CustomGPUManager::disableBlend()
     {
       glDisable(GL_BLEND);
-    }*/
-/*
+    }
+
     void CustomGPUManager::enableVertexAttribute(const EDK3::dev::Buffer* buffer, const unsigned attribute_index, const EDK3::Type type, const bool normalized, const unsigned offset, const unsigned stride)
     {
       unsigned int size = 0;
@@ -339,8 +336,7 @@ namespace EDK3
     {
       glDisableVertexAttribArray(attrib_index); 
     }
-*/
-/*
+
     void CustomGPUManager::enableCullFaces(const FaceType f)
     {
       GPUManager::enableCullFaces(f);
@@ -448,12 +444,19 @@ namespace EDK3
         type = GL_UNSIGNED_BYTE;
         break;
       }
-      
+
+      if (wireframe_){
+        m = GL_LINES;
+      }
+
       buffer->bind(Buffer::kTarget_Elements);
       glDrawElements(m, count, type, (void*)offset);
     }
-*/
-    
+
+    void CustomGPUManager::set_wireframe(bool wireframe)
+    {
+      wireframe_ = wireframe;
+    }
   }
   
 }

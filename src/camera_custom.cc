@@ -1,13 +1,32 @@
+#include "EDK3/geometry.h"
+#include "EDK3/node.h"
+#include "EDK3/drawable.h"
+#include "EDK3/material.h"
 #include "ESAT/math.h"
 #include "ESAT/input.h"
 #include "camera_custom.h"
+#include "custom_gpu_manager.h"
 #include "oxml/Mathf.h"
 #include "oxml/Vec3.h"
 #include "oxml/Mat4.h"
+#include "EDK3/dev/gpumanager.h"
 
 
 namespace EDK3{
 
+
+struct DrawInfo
+{
+  const Geometry *geo;
+  const Material *mat;
+  const MaterialSettings *mat_set;
+  ESAT::Mat4 model;
+};
+
+struct CameraCustom::CamData
+{
+  std::vector<DrawInfo> draw_info;
+};
 
 CameraCustom::CameraCustom(){
   accum_mouse_offset_ = {0.0f, 0.0f};
@@ -17,6 +36,7 @@ CameraCustom::CameraCustom(){
   joystickMovementSpeed_ = 0.01f;
   joystickSensitivity_ = 8.0f;
   turboSpeed_ = 0.2f;
+  data_.alloc();
 }
 CameraCustom::CameraCustom(const CameraCustom& ){}
 CameraCustom::~CameraCustom(){}
@@ -163,6 +183,89 @@ void CameraCustom::update(const double delta_time, const float window_width, con
     }
   
 
+  }
+
+  // Prepara la informacion de pintado de un objeto y la inserta en el vector
+  static void RecursiveCull(std::vector<DrawInfo>& draw_queue, const Node *node, ESAT::Mat4 parent_model){
+    DrawInfo info;
+    
+    const float *scale = node->scale();
+    const float *position = node->position();
+    const float *rotation = node->rotation_xyz();
+    ESAT::Mat4 model = ESAT::Mat4Identity();
+    model = ESAT::Mat4Multiply(ESAT::Mat4Scale(scale[0], scale[1], scale[2]), model);
+    model = ESAT::Mat4Multiply(ESAT::Mat4RotateX(rotation[0]), model);
+    model = ESAT::Mat4Multiply(ESAT::Mat4RotateY(rotation[1]), model);
+    model = ESAT::Mat4Multiply(ESAT::Mat4RotateZ(rotation[2]), model);
+    model = ESAT::Mat4Multiply(ESAT::Mat4Translate(position[0], position[1], position[2]), model);
+    model = ESAT::Mat4Multiply(parent_model, model);
+    
+    const Drawable *d_node = dynamic_cast<const Drawable*>(node);
+    if (d_node != nullptr)
+    {
+      info.geo = d_node->geometry();
+      info.mat = d_node->material();
+      info.mat_set = d_node->material_settings();
+      info.model = model;
+      draw_queue.push_back(info);
+    }
+    for (int i = 0; i < node->num_children(); i++)
+    {
+      RecursiveCull(draw_queue, node->child(i), model);
+    }
+  }
+  
+  // Preparamos los objetos para que se pinten  
+  void CameraCustom::doCull(const Node* root_node)
+  {
+    data_->draw_info.clear(); // Limpiamos el vector de informacion de pintado
+    int num_children = root_node->num_children();
+    for (int i = 0; i < num_children; i++)
+    {
+      RecursiveCull(data_->draw_info, root_node->child(i), ESAT::Mat4Identity()); //LLamamos a la funcion para que prepare los elementos
+    }
+  }
+
+  void CameraCustom::doRender() const
+  {
+    float rgba[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    EDK3::dev::GPUManager::Instance()->clearFrameBuffer(rgba);
+    EDK3::dev::CustomGPUManager* gpu = dynamic_cast<EDK3::dev::CustomGPUManager*>(EDK3::dev::GPUManager::Instance());
+    bool wireframe = false;
+    if (gpu)
+    {
+      if (wireframe_)
+      {
+        gpu->set_wireframe(true);
+      }
+    }
+    int num_obj = data_->draw_info.size();
+    for (int i = 0; i < num_obj; i++)
+    {
+      if (data_->draw_info[i].mat->enable(data_->draw_info[i].mat_set))
+      {
+        data_->draw_info[i].mat->setupCamera(this->projection_matrix(),this->view_matrix());
+        data_->draw_info[i].mat->setupModel(data_->draw_info[i].model.d);
+        int num_attrib = data_->draw_info[i].mat->num_attributes_required();
+        for (int a = 0; a < num_attrib; a++)
+        {
+          auto att = data_->draw_info[i].mat->attribute_at_index(a);
+          data_->draw_info[i].geo->bindAttribute(att, a);
+        }
+        
+        data_->draw_info[i].geo->render();
+        
+      }
+    }
+    if (gpu)
+    {
+      gpu->set_wireframe(false);
+    }
+  }
+
+  void CameraCustom::set_wireframe(bool wireframe)
+  {
+    wireframe_ = wireframe;
   }
 
   void CameraCustom::setFollowObject(ESAT::Vec3 pos){
