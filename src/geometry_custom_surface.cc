@@ -21,8 +21,7 @@ namespace EDK3
 
   SurfaceCustom::~SurfaceCustom(){}
 
-  void SurfaceCustom::init(const float* surface_points, const int num_heights, const int num_revs)
-	{
+  void SurfaceCustom::init(const float* surface_points, const int num_heights, const int num_revs, bool inverted){
     this->num_heights_ = num_heights;
     this->num_revs_ = num_revs;
 
@@ -172,19 +171,38 @@ namespace EDK3
     // Order 
 		int index = 0;
 		int i = 0;
-		for (int y = 0; y < num_heights_; y++) {
-			for (int x = 0; x < num_revs_; x++) {
-				i = x + y * num_revs_;
-				index = i * 6;
-				index_buff[index] = i + y + (num_revs_ + 1);
-				index_buff[index + 1] = i + y + 1;
-				index_buff[index + 2] = i + y;
 
-				index_buff[index + 3] = i + y + 1 + (num_revs_ + 1);
-				index_buff[index + 4] = i + y + 1;
-				index_buff[index + 5] = i + y + (num_revs_ + 1);
-			}
-		}
+    if(!inverted){
+      // Normal surface
+      for (int y = 0; y < num_heights_; y++) {
+        for (int x = 0; x < num_revs_; x++) {
+          i = x + y * num_revs_;
+          index = i * 6;
+          index_buff[index] = i + y + (num_revs_ + 1);
+          index_buff[index + 1] = i + y + 1;
+          index_buff[index + 2] = i + y;
+
+          index_buff[index + 3] = i + y + 1 + (num_revs_ + 1);
+          index_buff[index + 4] = i + y + 1;
+          index_buff[index + 5] = i + y + (num_revs_ + 1);
+        }
+      }
+    }else{
+      // Surface revolution like a donut
+      for (int y = 0; y < num_heights_; y++) {
+        for (int x = 0; x < num_revs_; x++) {
+          i = x + y * num_revs_;
+          index = i * 6;
+          index_buff[index + 5] = i + y + (num_revs_ + 1);
+          index_buff[index + 4] = i + y + 1;
+          index_buff[index + 3] = i + y;
+
+          index_buff[index + 2] = i + y + 1 + (num_revs_ + 1);
+          index_buff[index + 1] = i + y + 1;
+          index_buff[index] = i + y + (num_revs_ + 1);
+        }
+      }
+    }
 
     dev::GPUManager* gpu = dev::GPUManager::Instance();
 
