@@ -20,9 +20,22 @@
 
 namespace EDK3 {
 
+/**
+ * @class MaterialBasic
+ * @brief Represents a basic material derived from EDK3::Material.
+ *
+ * This class defines a basic material with properties such as color. It overrides several methods from the base Material class.
+ */
 class MaterialBasic : public EDK3::Material {
  public:
+  /**
+  * @brief Constructor de MaterialBasic.
+  */
   MaterialBasic();
+
+  /**
+  * @brief Inicializa el material.
+  */
   void init();
 
   virtual bool enable(const EDK3::MaterialSettings *mat) const override;
@@ -33,7 +46,12 @@ class MaterialBasic : public EDK3::Material {
   virtual EDK3::Attribute attribute_at_index(const unsigned int attrib_idx) const;
   virtual EDK3::Type attribute_type_at_index(const unsigned int attrib_index) const;
 
-
+  /**
+   * @class MaterialBasicSettings
+   * @brief Represents the settings for the MaterialBasic material.
+   *
+   * This class defines the settings for the MaterialBasic material, such as color.
+   */
   class MaterialBasicSettings : public EDK3::MaterialSettings {
    public:
     MaterialBasicSettings() {

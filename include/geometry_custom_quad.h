@@ -15,13 +15,39 @@
 
 namespace EDK3 {
 
+/**
+ * @class QuadCustom
+ * @brief Represents a custom quad geometry derived from EDK3::Geometry.
+ *
+ * This class defines a custom quad geometry used for rendering.
+ */
 class QuadCustom : public EDK3::Geometry {
  public:
+  /**
+  * @brief Default constructor.
+  */
   QuadCustom();
 
-  void init(bool *wireframe, const float quad_size = 1.0f);
+  /**
+   * @brief Initializes the custom quad geometry.
+   *
+   * @param quad_size The size of the quad (default: 1.0f).
+   */
+  void init(const float quad_size = 1.0f);
+
+  /**
+  * @brief Binds the specified attribute to the specified location.
+  *
+  * @param a The attribute to bind.
+  * @param where_to_bind_attribute The location to bind the attribute.
+  * @return True if the attribute is bound successfully, false otherwise.
+  */
   virtual bool bindAttribute(const Attribute a,
                              unsigned int where_to_bind_attribute) const override;
+
+  /**
+   * @brief Renders the quad geometry.
+   */
   virtual void render() const override;
 
  protected:
@@ -35,7 +61,6 @@ class QuadCustom : public EDK3::Geometry {
   EDK3::ref_ptr<EDK3::dev::Buffer> elements_buffer;
   EDK3::ref_ptr<EDK3::dev::Buffer> order_buffer;
   bool is_initialized_;
-  bool *wireFrameMode_;
 };
 
 } //EDK3
