@@ -23,11 +23,11 @@ namespace EDK3
     return *this;
   }
   
-  void TerrainCustom::init (bool *wireframe, const int num_cols, const int num_rows, const float height_mult, const float size, const bool is_centered){
+  void TerrainCustom::init (const int num_cols, const int num_rows, const float height_mult, const float size, const bool is_centered){
     num_cols_ = num_cols;
     num_rows_ = num_rows;
     is_initialized_ = true;
-    wireFrameMode_ = wireframe;
+ 
     
     const int num_vertex_x = num_cols + 1;
     const int num_vertex_y = num_rows + 1;
@@ -174,11 +174,9 @@ namespace EDK3
   }
 
   void TerrainCustom::render() const{
-    if(*wireFrameMode_){
-      dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Lines, (num_cols_ * num_rows_ * 6), order_buffer.get(), T_UINT);
-    }else{
-      dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, (num_cols_ * num_rows_ * 6), order_buffer.get(), T_UINT);
-    }
+
+    dev::GPUManager::Instance()->drawElements(dev::GPUManager::kDrawMode_Triangles, (num_cols_ * num_rows_ * 6), order_buffer.get(), T_UINT);
+    
   }
 
   bool TerrainCustom::bindAttribute
