@@ -23,6 +23,7 @@
 #include "EDK3/dev/gpumanager.h"
 #include "geometry_custom_terrain.h"
 #include "geometry_custom_sphere.h"
+#include "geometry_custom_surface.h"
 #include "material_custom.h"
 #include "joystick.h"
 #include "EDK3/rendertarget.h"
@@ -85,11 +86,86 @@ float sphere_pivot[3];
 float sphere_pos[3] = {0.0f, 0.0f, 0.0f};
 float sphere_rotation_speed = 0.2f;
 
+float surface_position[3] = {0.0f, 15.0f, 0.0f};
+float surface_rotation_speed = 0.2f;
+
 
 char controller_type;
 
 bool wireFrame_ = false;
 bool wireFrame2_ = false;
+
+static float gTriangle[] = {
+  0.0f, 1.0f, 
+  1.0f, 0.0f, 
+  0.0f, -1.0f
+};
+
+static float surface_points[] = {
+  0.00 , 0.84,
+  0.03 , 0.83,
+  0.04 , 0.76,
+  0.04 , 0.73,
+  0.07 , 0.72,
+  0.12 , 0.74,
+  0.15 , 0.76,
+  0.15 , 0.72,
+  0.10 , 0.68,
+  0.05 , 0.66,
+  0.05 , 0.61,
+  0.05 , 0.57,
+  0.07 , 0.57,
+  0.07 , 0.52,
+  0.07 , 0.50,
+  0.06 , 0.47,
+  0.07 , 0.45,
+  0.11 , 0.31,
+  0.14 , 0.27,
+  0.20 , 0.22,
+  0.25 , 0.20,
+  0.28 , 0.20,
+  0.26 , 0.17,
+  0.24 , 0.13,
+  0.21 , 0.09,
+  0.18 , 0.06,
+  0.14 , 0.03,
+  0.10 , 0.01,
+  0.06 , 0.01,
+  0.00 , 0.01
+};
+
+static float otherPoints[] = {
+0.00 , 0.90,
+    0.02 , 0.90,
+    0.02 , 0.83,
+    0.06 , 0.83,
+    0.12 , 0.84,
+    0.19 , 0.86,
+    0.17 , 0.84,
+    0.10 , 0.80,
+    0.04 , 0.79,
+    0.04 , 0.79,
+    0.04 , 0.74,
+    0.04 , 0.34,
+    0.06 , 0.34,
+    0.06 , 0.29 ,
+    0.04 , 0.28 ,
+    0.05 , 0.19,
+    0.06 , 0.11,
+    0.10 , 0.02,
+    0.17 , -0.05,
+     0.31 , -0.11,
+    0.37 , -0.12,
+    0.38 , -0.16,
+    0.37 , -0.22,
+     0.34 , -0.25,
+    0.28 , -0.27,
+    0.23 , -0.30 ,
+    0.16 , -0.33,
+         0.11 , -0.33,
+    0.04 , -0.33,
+    0.00 , -0.34
+};
 
 
 
@@ -187,6 +263,13 @@ void InitScene() {
   cube_geo.alloc();
   cube_geo->init(&wireFrame_,1.0f, false, true);
 
+  // Create surface
+  EDK3::ref_ptr<EDK3::SurfaceCustom> surface;
+  surface.alloc();
+  //surface->init(surface_points, 30, 32);
+  surface->init(otherPoints,30, 30);
+
+
 
   // Create material
 
@@ -219,22 +302,39 @@ void InitScene() {
   mat_custom.alloc();
   mat_custom->init("./test/cubemap.vs", "./test/cubemap.fs");
 
+  // Surface
+  EDK3::ref_ptr<EDK3::MaterialCustom> mat_surface;
+  mat_surface.alloc();
+  mat_surface->init("./test/surface_vertex.shader", "./test/surface_fragment.shader");
+
 
   // Create texture
+
+  // Terrain
   EDK3::ref_ptr<EDK3::Texture> t_texture;
   EDK3::Texture::Load("./test/channel0.png", &t_texture);
   EDK3::ref_ptr<EDK3::Texture> t_s_texture;
   EDK3::Texture::Load("./test/channel1.png", &t_s_texture);
 
+  // Water
   EDK3::ref_ptr<EDK3::Texture> w_texture;
   EDK3::Texture::Load("./test/watter_diff.png", &w_texture);
   w_texture->set_wrap_r(EDK3::Texture::Wrap::W_REPEAT);
   w_texture->set_wrap_s(EDK3::Texture::Wrap::W_REPEAT);
   w_texture->set_wrap_t(EDK3::Texture::Wrap::W_REPEAT);
   
+  // Sphere
   EDK3::ref_ptr<EDK3::Texture> s_texture;
   EDK3::Texture::Load("./test/T_Chopper.jpg", &s_texture);
 
+  // Surface
+  EDK3::ref_ptr<EDK3::Texture> surface_texture;
+  EDK3::Texture::Load("./test/T_Chopper.jpg", &surface_texture);
+  if(!surface_texture){
+    printf("No hay textura de la surfaceeeee!!!\n");
+  }
+
+  // Boat
   EDK3::ref_ptr<EDK3::Texture> b_texture;
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
   EDK3::Texture::Load("./test/boat/barcoJosefaDiffuse.png", &b_texture);
@@ -242,12 +342,14 @@ void InitScene() {
     printf("No hay textura del boat!!!\n");
   }
   
+  // Faro
   EDK3::ref_ptr<EDK3::Texture> f_texture;
   //EDK3::Texture::Load("./test/boat/boat_img.jpg", &b_texture);
   EDK3::Texture::Load("./test/T_EDK_Logo.png", &f_texture);
   if(!f_texture){
     printf("No hay textura del faro!!!\n");
   }
+
 
   // Material custom settings
 
@@ -295,8 +397,18 @@ void InitScene() {
   mat_custom_settings.alloc();
   mat_custom_settings->set_cube_map(cube_map);
 
+  // Surface
+  float surface_color[4] = {0.5f, 1.0f, 0.5f, 1.0f};
+  EDK3::ref_ptr<EDK3::MaterialCustom::MaterialCustomSettings> surface_mat_settings;
+  surface_mat_settings.alloc();
+  surface_mat_settings->set_diffuse_texture(surface_texture);
+  surface_mat_settings->set_specular_texture(surface_texture);
+  surface_mat_settings->set_color(surface_color);
+
+
 
   // Lights
+
   dirLight.alloc();
   dirLight->active = 1;
   dirLight->dir[0] = 1.0f;
@@ -357,14 +469,17 @@ void InitScene() {
   mat_settings->set_dir_light(dirLight);
   water_mat_settings->set_dir_light(dirLight);
   sphere_mat_settings->set_dir_light(dirLight);
+  surface_mat_settings->set_dir_light(dirLight);
 
   mat_settings->set_point_light(pointLight);
   water_mat_settings->set_point_light(pointLight);
   sphere_mat_settings->set_point_light(pointLight);
+  surface_mat_settings->set_point_light(pointLight);
 
   mat_settings->set_spot_light(spotLight);
   water_mat_settings->set_spot_light(spotLight);
   sphere_mat_settings->set_spot_light(spotLight);
+  surface_mat_settings->set_spot_light(spotLight);
 
   //mat_sett_boat->set_dir_light(dirLight);
 
@@ -413,6 +528,7 @@ void InitScene() {
   root->addChild(faro_node.get());
 
   // Sphere
+
   EDK3::ref_ptr<EDK3::Drawable> sphere_drawable;
   EDK3::ref_ptr<EDK3::Node> sphere_node;
   sphere_pos[0] = 9.0f;
@@ -432,7 +548,9 @@ void InitScene() {
   sphere_node->addChild(sphere_drawable.get());
     
   root->addChild(sphere_node.get());
+  
 
+  // Cube map
   EDK3::ref_ptr<EDK3::Drawable> cube;
   cube.alloc();
   cube->set_geometry(cube_geo.get());
@@ -443,6 +561,13 @@ void InitScene() {
   cube->set_HPR(0.0f, 0.0f, 0.0f);
   root->addChild(cube.get());
 
+  // Surface
+  node.alloc();
+  node->set_geometry(surface.get());
+  node->set_material(mat_surface.get());
+  node->set_material_settings(surface_mat_settings.get());
+  node->set_position(surface_position[0], surface_position[1], surface_position[2]);
+  root->addChild(node.get());
 
   // Water
   node.alloc();
@@ -488,6 +613,7 @@ void InitScene() {
   mat_settings->set_camera_position(GameState.camera->position());
   water_mat_settings->set_camera_position(GameState.camera->position());
   sphere_mat_settings->set_camera_position(GameState.camera->position());
+  surface_mat_settings->set_camera_position(GameState.camera->position());
   EDK3::dev::GPUManager::CheckGLError("Prepare END");
 }
 
@@ -604,6 +730,12 @@ void UpdateFn(double dt) {
   for(int i = 0; i < GameState.root->num_children(); i++){
     EDK3::ref_ptr<EDK3::Node> child = GameState.root->child(i);
   }
+
+  EDK3::ref_ptr<EDK3::Node> surface = GameState.root->child(5);
+  surface->set_position(surface_position[0], surface_position[1], surface_position[2]);
+  surface->set_rotation_y(ESAT::Time() * 0.005f * surface_rotation_speed);
+  //surface->set_scale(50.0f,50.0f,50.0f);
+
   //piedra1->set_position(piedra_pos[0], piedra_pos[1], piedra_pos[2]);
   //faro->set_rotation_y(ESAT::Time() * 0.001f * piedra_rotation);
 
@@ -832,9 +964,6 @@ void ImGuiFn(double dt) {
       
     }
 
-    
-
-
   }
   
   ImGui::DragFloat3("Piedra", piedra_pos,0.01f, -100.0f, 100.0f);
@@ -902,6 +1031,11 @@ void ImGuiFn(double dt) {
     if(ImGui::Button("EdgeDetection")){
       GameState.mat_postprocess->init(EDK3::PostprocessBasic::PostProcessType::EdgeDetection);
     }
+  }
+
+  if(ImGui::CollapsingHeader("Surface revolution")){
+    ImGui::DragFloat3("Position",surface_position, 0.01f, -100.0f, 100.0f);
+    ImGui::DragFloat("Rotation",&surface_rotation_speed, 0.01f, -100.0f, 100.0f);
   }
 
   ImGui::Checkbox("WireFrame",&wireFrame2_);

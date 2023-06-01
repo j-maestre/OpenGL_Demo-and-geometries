@@ -98,16 +98,16 @@ namespace EDK3
 #   ifdef DEBUG
     for (int i = 0; i < vertex_buff.size(); i++)
     {
-      printf("Vertex [%d]\n", i);
-      printf("[Pos] x: %f, y: %f, z: %f\n", vertex_buff[i].pos.x, vertex_buff[i].pos.y, vertex_buff[i].pos.z);
-      printf("[Normal] x: %f, y: %f, z: %f\n", vertex_buff[i].normal.x, vertex_buff[i].normal.y, vertex_buff[i].normal.z);
-      printf("[Uv] x: %f, y: %f\n", vertex_buff[i].uv.x, vertex_buff[i].uv.y);
+      //printf("Vertex [%d]\n", i);
+      //printf("[Pos] x: %f, y: %f, z: %f\n", vertex_buff[i].pos.x, vertex_buff[i].pos.y, vertex_buff[i].pos.z);
+      //printf("[Normal] x: %f, y: %f, z: %f\n", vertex_buff[i].normal.x, vertex_buff[i].normal.y, vertex_buff[i].normal.z);
+      //printf("[Uv] x: %f, y: %f\n", vertex_buff[i].uv.x, vertex_buff[i].uv.y);
     }
 
     for (int i = 0; i < index_buff.size(); i += 3)
     {
-      printf("Triangle [%d]\n", (i / 3));
-      printf("[Index] %d, %d, %d\n", index_buff[i], index_buff[i + 1], index_buff[i + 2]);
+      //printf("Triangle [%d]\n", (i / 3));
+      //printf("[Index] %d, %d, %d\n", index_buff[i], index_buff[i + 1], index_buff[i + 2]);
     }
 #   endif
 

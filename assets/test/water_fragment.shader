@@ -331,7 +331,7 @@ void main(){
   //tonemapping
   C = aces_tonemap(C);
     
-	fragColor = vec4(C,1.0);
+	fragColor = vec4(C, 0.75);
 }
 
 
