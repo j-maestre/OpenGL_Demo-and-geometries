@@ -529,7 +529,7 @@ void InitScene() {
   //pointLight->pos[1] = boatPos.y +2.0f;
   //pointLight->pos[2] = boatPos.z;
   pointLight->pos[0] = 0.0f;
-  pointLight->pos[1] = 5.27f;
+  pointLight->pos[1] = 13.27f;
   pointLight->pos[2] = -150.8;
   pointLight->specular_color[0] = 1.0f;
   pointLight->specular_color[1] = 1.0f;
