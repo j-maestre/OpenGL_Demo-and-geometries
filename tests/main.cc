@@ -34,6 +34,7 @@
 #include "cubemap_material.h"
 #include "custom_gpu_cubemap.h"
 #include "geometry_custom_cube.h"
+#include "geometry_custom_quad.h"
 #include "dev/custom_gpu_manager.h"
 
 #include "ESAT_extra/imgui.h"
@@ -44,6 +45,10 @@
 //Unnamed struct and it's unique instance:
 struct {
   EDK3::ref_ptr<EDK3::CameraCustom> camera;
+  EDK3::ref_ptr<EDK3::CameraCustom> minimap_cam;
+  EDK3::ref_ptr<EDK3::RenderTarget> minimap_rt;
+  EDK3::ref_ptr<EDK3::MatDiffuseTexture> minimap_mat;
+  EDK3::ref_ptr<EDK3::MatDiffuseTexture::Settings> minimap_sett;
   EDK3::ref_ptr<EDK3::Node> root;
   EDK3::ref_ptr<EDK3::RenderTarget> render_target;
   EDK3::ref_ptr<EDK3::PostprocessBasic> mat_postprocess;
@@ -64,8 +69,8 @@ std::vector<std::string> cube_map_tex = {
 const int kWindowWidth = 1024;
 const int kWindowHeight = 768;
 
-const int kTerrainWidth = 1024;
-const int kTerrainHeight = 1024;
+const int kTerrainWidth = 2048;
+const int kTerrainHeight = 2048;
 
 bool followBoat_ = false;
 ESAT::Vec3 boatPos = {0.0f, 0.773f, -75.0f};
@@ -266,6 +271,12 @@ void InitScene() {
   //Allocating root node:
   EDK3::Node* root = GameState.root.alloc();
 
+  GameState.minimap_rt.alloc();
+  GameState.minimap_rt->init(kWindowWidth, kWindowHeight);
+  GameState.minimap_mat.alloc();
+  GameState.minimap_sett.alloc();
+  GameState.minimap_sett->set_texture(GameState.minimap_rt->color_texture());
+  
   // Enable transparences
   EDK3::dev::GPUManager::BlendParam src = EDK3::dev::GPUManager::BlendParam::kBlendParam_SourceAlpha;
   EDK3::dev::GPUManager::BlendParam dst = EDK3::dev::GPUManager::BlendParam::kBlendParam_OneMinusSourceAlpha;
@@ -331,7 +342,7 @@ void InitScene() {
   //surface->init(otherPoints,30, 30);
   surface->init(cascada,30, 360, false);
 
-
+  
 
   // Create material
 
@@ -377,7 +388,7 @@ void InitScene() {
   mat_surface.alloc();
   mat_surface->init("./test/surface_vertex.shader", "./test/surface_fragment.shader");
 
-
+  
   // Create texture
 
   // Terrain
@@ -583,9 +594,12 @@ void InitScene() {
 
   //mat_sett_boat->set_dir_light(dirLight);
 
+  
   // Drawable
   EDK3::ref_ptr<EDK3::Drawable> node;
 
+
+  
   // Terrain
   node.alloc();
   node->set_geometry(terrain.get());
@@ -593,8 +607,7 @@ void InitScene() {
   node->set_material_settings(mat_settings.get());
   node->set_position(-1.0f, 0.0f, -1.0f);
   root->addChild(node.get());  // 0
-
-
+  
   
   // Boat
   EDK3::ref_ptr<EDK3::Drawable> drawable;
@@ -648,7 +661,6 @@ void InitScene() {
     
   root->addChild(sphere_node.get()); // 3
   
-
   // Cube map
   EDK3::ref_ptr<EDK3::Drawable> cube;
   cube.alloc();
@@ -703,7 +715,6 @@ void InitScene() {
     island_node->addChild(drawable.get());
   }
   root->addChild(island_node.get()); // 7
-  
 
   // Water
   node.alloc();
@@ -711,8 +722,28 @@ void InitScene() {
   node->set_material(mat_water.get());
   node->set_material_settings(water_mat_settings.get());
   node->set_position(-1.0f,0.0f,-1.0f);
+  node->set_scale(5.0f, 1.0f, 5.0f);
   root->addChild(node.get()); // 8
 
+  EDK3::ref_ptr<EDK3::QuadCustom> quad;
+  EDK3::ref_ptr<EDK3::Drawable> Quad_node;
+  EDK3::ref_ptr<EDK3::MatDiffuse> quad_mat;
+  EDK3::ref_ptr<EDK3::MatDiffuse::Settings> quad_sett;
+  quad_mat.alloc();
+  quad_sett.alloc();
+  float quad_color[] = {1.0f, 0.0f, 0.0f, 1.0f};
+  quad_sett->set_color(quad_color);
+
+  quad.alloc();
+  quad->init();
+  
+  Quad_node.alloc();
+  Quad_node->set_geometry(quad.get());
+  Quad_node->set_material(quad_mat.get());
+  Quad_node->set_material_settings(quad_sett.get());
+  Quad_node->set_position(0.0f, 2.0f, 0.0f);
+  Quad_node->set_scale(2.0f, 2.0f, 2.0f);
+  root->addChild(Quad_node.get()); // 9
 
   // Surface
   node.alloc();
@@ -720,7 +751,7 @@ void InitScene() {
   node->set_material(mat_surface.get());
   node->set_material_settings(surface_mat_settings.get());
   node->set_position(surface_position[0], surface_position[1], surface_position[2]);
-  root->addChild(node.get()); // 9
+  root->addChild(node.get()); // 10
 
 
   // Post Process
@@ -754,7 +785,27 @@ void InitScene() {
   GameState.camera->initViewTarget(kWindowWidth,kWindowHeight);
   //GameState.camera->setFollowObject(boatPos);
 
-  GameState.camera->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 1500.0f);
+  GameState.camera->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 6000.0f);
+
+  GameState.minimap_cam.alloc();
+  GameState.minimap_cam->set_wireframe(false);
+  //float pos[] = { 120.0f / 2.0f, 140.0f / 2.0f, 120.0f / 2.0f };
+  //float view[] = { -120.0f, -140.0f, -120.0f };
+
+  float minimap_pos[] = { -17.9248f, 278.6944f, -202.111740f };
+  float minimap_view[] = { 0.020543f, -0.54703f,  0.836855f};
+  GameState.minimap_cam->set_position(minimap_pos);
+  
+  const float minimap_target[] = {boatPos.x,boatPos.y+5.0f,boatPos.z};
+  //GameState.camera->set_view_target(target);
+  GameState.minimap_cam->set_view_direction(minimap_view);
+  GameState.minimap_cam->setEnabled(true);
+  GameState.minimap_cam->setSpeed(0.02f);
+  GameState.minimap_cam->setSensitibity(1.0f);
+  GameState.minimap_cam->initViewTarget(kWindowWidth,kWindowHeight);
+
+  GameState.minimap_cam->setupPerspective(70.0f, 8.0f / 6.0f, 1.0f, 6000.0f);
+  
   mat_settings->set_camera_position(GameState.camera->position());
   water_mat_settings->set_camera_position(GameState.camera->position());
   sphere_mat_settings->set_camera_position(GameState.camera->position());
@@ -843,7 +894,6 @@ void UpdateFn(double dt) {
     GameState.camera->setFollowObject(boatPos);
     const float target[] = {boatPos.x,boatPos.y+5.0f,boatPos.z};
     GameState.camera->set_view_target(target);
-
   }
   
   if(rotate_spot_light){
@@ -858,7 +908,7 @@ void UpdateFn(double dt) {
 
   //SetLightToBolinga();
   sphere_center->child(0)->set_position(sphere_pos[0],sphere_pos[1],sphere_pos[2]);
-
+  //GameState.minimap_cam->set_position(sphere_pos);
 
   EDK3::ref_ptr<EDK3::Node> boat = GameState.root->child(1);
   //boat->set_scale(0.01f, 0.01f, 0.01f);
@@ -870,13 +920,12 @@ void UpdateFn(double dt) {
 
   EDK3::ref_ptr<EDK3::Node> faro = GameState.root->child(2);
   faro->set_position(faroPos.x, faroPos.y, faroPos.z);
-  
 
   for(int i = 0; i < GameState.root->num_children(); i++){
     //EDK3::ref_ptr<EDK3::Node> child = GameState.root->child(i);
   }
 
-  EDK3::ref_ptr<EDK3::Node> surface = GameState.root->child(9);
+  EDK3::ref_ptr<EDK3::Node> surface = GameState.root->child(10);
   surface->set_position(surface_position[0], surface_position[1], surface_position[2]);
   //surface->set_rotation_y(ESAT::Time() * 0.005f * surface_rotation_speed);
   //surface->set_rotation_x(ESAT::Time() * 0.005f * surface_rotation_speed);
@@ -918,6 +967,12 @@ void RenderFn() {
   GameState.camera->doRender();
   GameState.render_target->end();
   GameState.mat_postprocess->drawFullScreenQuad(GameState.mat_postprocess_settings.get());
+  GameState.minimap_cam->doCull(GameState.root.get());
+  GameState.minimap_rt->begin();
+  GameState.minimap_cam->doRender();
+  GameState.minimap_rt->end();
+  GameState.minimap_mat->drawScreenQuad(50.0f, 50.0f, 250.0f, 250.0f, GameState.minimap_sett.get());
+  
   EDK3::dev::GPUManager::CheckGLError("end Render-->");
 }
 
@@ -967,7 +1022,6 @@ void ImGuiFn(double dt) {
     ImGui::DragFloat("Boat X: ",&boatPos.x, 0.1f, -1000.0f,1000.0f, "%f");
     ImGui::DragFloat("Boat Y: ",&boatPos.y, 0.1f, -1000.0f,1000.0f, "%f");
     ImGui::DragFloat("Boat Z: ",&boatPos.z, 0.1f, -1000.0f,1000.0f, "%f");
-    
   }
   
   if(ImGui::CollapsingHeader("Faro")){
@@ -1021,8 +1075,6 @@ void ImGuiFn(double dt) {
       ImGui::DragFloat("Position Y: ",&spotLight->pos[1], 0.01f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Position Z: ",&spotLight->pos[2], 0.01f, -100.0f,100.0f, "%f");
 
-
-      
       ImGui::DragFloat("Direction X: ",&spotLight->dir[0], 0.01f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Direction Y: ",&spotLight->dir[1], 0.01f, -100.0f,100.0f, "%f");
       ImGui::DragFloat("Direction Z: ",&spotLight->dir[2], 0.01f, -100.0f,100.0f, "%f");
@@ -1127,12 +1179,7 @@ void ImGuiFn(double dt) {
         spotLight->linear_att = 0.007f;
         spotLight->quadratic_att = 0.0002f;
       }
-
-
-
-      
     }
-
   }
   
   ImGui::DragFloat3("Piedra", piedra_pos,0.01f, -100.0f, 100.0f);
