@@ -178,6 +178,10 @@ void main() {
   //fragColor = vec4(color, 1.0);
   //fragColor = vec4(s_uv, 0.0, 1.0);
   //fragColor = vec4(color, 1.0);
-  fragColor = vec4(s_normal, 1.0);
+  //fragColor = vec4(s_normal, 1.0);
+  fragColor = vec4(0.0, 0.0, 0.7, 1.0);
+  vec4 colorFinal = texture(u_diffuse_color, s_uv);
+  colorFinal.w = 0.6;
+  fragColor = colorFinal;
   //fragColor = vec4(u_pointLight.diffuse_color, 1.0);
 }
