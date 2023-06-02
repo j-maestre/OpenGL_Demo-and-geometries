@@ -38,12 +38,51 @@ class MaterialBasic : public EDK3::Material {
   */
   void init();
 
+    /**
+    * @brief Enables the cube map material with the specified settings.
+    *
+    * @param mat The material settings.
+    * @return True if the material is enabled successfully, false otherwise.
+    */
   virtual bool enable(const EDK3::MaterialSettings *mat) const override;
+
+  /**
+  * @brief Sets up the camera for rendering.
+  *
+  * @param projection The projection matrix.
+  * @param view The view matrix.
+  */
   virtual void setupCamera(const float projection[16], const float view[16]) const override;
+
+    /**
+    * @brief Sets up the model for rendering.
+    *
+    * @param model The model matrix.
+    */
   virtual void setupModel(const float model[16]) const override;
 
+
+  /**
+  * @brief Returns the number of attributes required by the material.
+  *
+  * @return The number of required attributes.
+  */
   virtual unsigned int num_attributes_required() const;
+
+  /**
+  * @brief Returns the attribute at the specified index.
+  *
+  * @param attrib_idx The attribute index.
+  * @return The attribute at the specified index.
+  */
   virtual EDK3::Attribute attribute_at_index(const unsigned int attrib_idx) const;
+
+  /**
+  * @class Settings
+  * @brief Represents the settings for the MaterialCubeMap.
+  *
+  * This class provides settings specific to the MaterialCubeMap.
+  */
   virtual EDK3::Type attribute_type_at_index(const unsigned int attrib_index) const;
 
   /**

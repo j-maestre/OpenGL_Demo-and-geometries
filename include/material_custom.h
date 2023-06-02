@@ -13,20 +13,79 @@
 
 namespace EDK3 {
 
+  /**
+   * @class MaterialCustom
+   * @brief Represents a basic material derived from EDK3::Material.
+   *
+   * This class defines a basic material with properties such as color. It overrides several methods from the base Material class.
+   */
   class MaterialCustom : public EDK3::Material {
   public:
+    /**
+    * @brief Constructor de MaterialCustom.
+    */
     MaterialCustom();
+
+    /**
+    * @brief Initializes the cube map material.
+    *
+    * @param vertex_path The vertex shader file path.
+    * @param fragment_path The fragment shader file path.
+    */
     void init(const char* vertex_path, const char* fragment_path);
 
+    /**
+    * @brief Enables the cube map material with the specified settings.
+    *
+    * @param mat The material settings.
+    * @return True if the material is enabled successfully, false otherwise.
+    */
     virtual bool enable(const EDK3::MaterialSettings *mat) const override;
+
+    /**
+    * @brief Sets up the camera for rendering.
+    *
+    * @param projection The projection matrix.
+    * @param view The view matrix.
+    */
     virtual void setupCamera(const float projection[16], const float view[16]) const override;
+
+    /**
+    * @brief Sets up the model for rendering.
+    *
+    * @param model The model matrix.
+    */
     virtual void setupModel(const float model[16]) const override;
 
+    /**
+    * @brief Returns the number of attributes required by the material.
+    *
+    * @return The number of required attributes.
+    */
     virtual unsigned int num_attributes_required() const;
+
+    /**
+    * @brief Returns the attribute at the specified index.
+    *
+    * @param attrib_idx The attribute index.
+    * @return The attribute at the specified index.
+    */
     virtual EDK3::Attribute attribute_at_index(const unsigned int attrib_idx) const;
+
+    /**
+    * @brief Returns the type of the attribute at the specified index.
+    *
+    * @param attrib_index The attribute index.
+    * @return The type of the attribute at the specified index.
+    */
     virtual EDK3::Type attribute_type_at_index(const unsigned int attrib_index) const;
 
-
+    /**
+    * @class MaterialCustomSettings
+    * @brief Represents the settings for the MaterialCubeMap.
+    *
+    * This class provides settings specific to the MaterialCubeMap.
+    */
     class MaterialCustomSettings : public EDK3::MaterialSettings {
     public:
       MaterialCustomSettings() {
