@@ -109,6 +109,20 @@ void CameraCustom::update(const double delta_time, const float window_width, con
                             position[2] - (view_dir_.z * speed_ * delta_time) };
             this->set_position(pos);
         }
+        if (ESAT::IsKeyPressed('Q'))
+        {
+          float pos[] = { position[0],
+                          position[1] - (speed_ * delta_time),
+                          position[2]};
+          this->set_position(pos);
+        }
+        if (ESAT::IsKeyPressed('E'))
+        {
+          float pos[] = { position[0],
+                          position[1] + (speed_ * delta_time),
+                          position[2]};
+          this->set_position(pos);
+        }
       }
 
       // Movement by joystick
